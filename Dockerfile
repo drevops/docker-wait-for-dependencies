@@ -1,8 +1,8 @@
-FROM alpine:3.18.5@sha256:34871e7290500828b39e22294660bee86d966bc0017544e848dd9a255cdf59e0
+FROM alpine:3.19.0@sha256:51b67269f354137895d43f3b3d810bfacd3945438e94dc5ac55fdac340352f48
 
 LABEL org.opencontainers.image.authors="Alex Skrypnyk <alex@drevops.com>" maintainer="Alex Skrypnyk <alex@drevops.com>"
 
-RUN apk add --no-cache bash=5.2.15-r5
+RUN apk add --no-cache bash=5.2.21-r0
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
