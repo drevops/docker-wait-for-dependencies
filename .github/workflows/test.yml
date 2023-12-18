@@ -20,7 +20,9 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
 
       - name: Lint scripts
-        uses: ludeeus/action-shellcheck@master
+        uses: luizm/action-sh-checker@v0.8.0
+        env:
+          SHFMT_OPTS: -i 2 -ci -s -d
 
       - name: Build Docker image
         run: docker build .
