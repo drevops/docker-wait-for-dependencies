@@ -15,7 +15,9 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+
     runs-on: ubuntu-latest
+
     steps:
       - name: Generate CalVer version
         id: calver
@@ -23,7 +25,8 @@ jobs:
           export VERSION="$(date "+%y.%-m").0"
           echo ::set-output name=version::${VERSION}
           echo "Version set to ${VERSION}"
-      - uses: release-drafter/release-drafter@v6
+      - name: Draft release notes
+        uses: release-drafter/release-drafter@v6
         with:
           tag: ${{ steps.calver.outputs.version }}
           name: ${{ steps.calver.outputs.version }}
