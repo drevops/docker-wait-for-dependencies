@@ -103,3 +103,6 @@ By default, there will be a 300 seconds timeout before cancelling the wait_for. 
 The main functionality is based on
 the [docker-wait-for-dependencies](https://github.com/ducktors/docker-wait-for-dependencies) project.
 A special thank you to the contributors for their original work.
+
+---
+Repository created using https://getscaffold.dev/ project scaffold template
