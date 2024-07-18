@@ -1,17 +1,17 @@
-name: Release Drafter
+name: Draft release notes
 
 on:
   push:
+    tags:
+      - '*'
     branches:
       - main
-  pull_request:
-    types: [opened, reopened, synchronize]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  update_release_draft:
+  release-drafter:
     permissions:
       contents: write
       pull-requests: write
@@ -23,7 +23,7 @@ jobs:
         id: calver
         run: |
           export VERSION="$(date "+%y.%-m").0"
-          echo ::set-output name=version::${VERSION}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "Version set to ${VERSION}"
 
       - name: Draft release notes
