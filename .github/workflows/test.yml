@@ -21,7 +21,7 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
 
       - name: Lint scripts
-        uses: luizm/action-sh-checker@v0.8.0
+        uses: luizm/action-sh-checker@v0.9.0
         env:
           SHFMT_OPTS: -i 2 -ci -s -d
 
