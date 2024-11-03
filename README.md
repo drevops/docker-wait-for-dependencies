@@ -105,4 +105,4 @@ the [docker-wait-for-dependencies](https://github.com/ducktors/docker-wait-for-d
 A special thank you to the contributors for their original work.
 
 ---
-Repository created using https://getscaffold.dev/ project scaffold template
+_This repository was created using the [Scaffold](https://getscaffold.dev/) project template_
