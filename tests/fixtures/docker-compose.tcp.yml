@@ -1,0 +1,39 @@
+services:
+  service1:
+    image: alpine:3.18
+    environment:
+      TEST_SERVICE1_SLEEP: ${TEST_SERVICE1_SLEEP:-5}
+    command: >
+      sh -lc "
+        echo \"[service1] Sleeping for $${TEST_SERVICE1_SLEEP}s before listening...\"
+        sleep $${TEST_SERVICE1_SLEEP}
+        echo \"[service1] Starting netcat listener on port 8001 after sleep for $${TEST_SERVICE1_SLEEP}s\"
+        while true; do nc -l -p 8001 >/dev/null 2>&1; done
+      "
+    ports:
+      - "8001:8001"
+
+  service2:
+    image: alpine:3.18
+    environment:
+      TEST_SERVICE2_SLEEP: ${TEST_SERVICE2_SLEEP:-10}
+    command: >
+      sh -lc "
+        echo \"[service2] Sleeping for $${TEST_SERVICE2_SLEEP}s before listening...\"
+        sleep $${TEST_SERVICE2_SLEEP}
+        echo \"[service2] Starting netcat listener on port 8002 after sleep for $${TEST_SERVICE2_SLEEP}s\"
+        while true; do nc -l -p 8002 >/dev/null 2>&1; done
+      "
+    ports:
+      - "8002:8002"
+
+  wait-for-dependencies:
+    build: ../..
+    depends_on:
+      - service1
+      - service2
+    environment:
+      - SLEEP_LENGTH=${TEST_SLEEP_LENGTH:-1}
+      - TIMEOUT_LENGTH=${TEST_TIMEOUT_LENGTH:-30}
+      - SUMMARY_ENABLED=${TEST_SUMMARY_ENABLED:-true}
+    command: service1:8001 service2:8002

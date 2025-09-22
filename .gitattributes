@@ -1,6 +1,11 @@
 # Ignore files for distribution archives.
 
-/.editorconfig   export-ignore
-/.gitattributes  export-ignore
-/.github         export-ignore
-/.gitignore      export-ignore
+/.editorconfig      export-ignore
+/.gitattributes     export-ignore
+/.github            export-ignore
+/.gitignore         export-ignore
+/CLAUDE.md          export-ignore
+/package-lock.json  export-ignore
+/package.json       export-ignore
+/renovate.json      export-ignore
+/tests              export-ignore
