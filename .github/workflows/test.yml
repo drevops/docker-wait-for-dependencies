@@ -10,20 +10,54 @@ on:
       - main
 
 jobs:
-  test-docker:
+  test:
     runs-on: ubuntu-latest
 
+    container:
+      # https://hub.docker.com/r/drevops/ci-runner
+      image: drevops/ci-runner:25.8.0@sha256:d6ba40fc4248ce291302a2cf212de9b80da5433f2fdf29be09ed59659df9e18d
+
     steps:
+      - name: Preserve $HOME set in the container
+        run: echo HOME=/root >> "$GITHUB_ENV" # https://github.com/actions/runner/issues/863
+
       - name: Check out the repo
         uses: actions/checkout@v5
 
-      - name: Lint Dockerfile
-        uses: hadolint/hadolint-action@v3.2.0
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Lint scripts
-        uses: luizm/action-sh-checker@v0.9.0
+      - name: Lint code
+        run: npm run lint
+        continue-on-error: ${{ vars.CI_LINT_IGNORE_FAILURE == '1' }}
+
+      - name: Run unit tests with code coverage
+        run: npm run test-coverage
+        shell: bash
+        continue-on-error: ${{ vars.CI_TEST_IGNORE_FAILURE == '1' }}
+
+      - name: Run functional tests
+        run: npm run test-functional
+        shell: bash
+        continue-on-error: ${{ vars.CI_TEST_IGNORE_FAILURE == '1' }}
+
+      - name: Upload coverage report as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{github.job}}-code-coverage-report
+          include-hidden-files: true
+          path: .coverage-html
+          if-no-files-found: error
+
+      - name: Upload coverage report to Codecov
+        uses: codecov/codecov-action@v5
+        if: ${{ env.CODECOV_TOKEN != '' }}
+        with:
+          directory: .coverage-html
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
         env:
-          SHFMT_OPTS: -i 2 -ci -s -d
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Build Docker image
         run: docker build .

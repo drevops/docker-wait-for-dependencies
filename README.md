@@ -23,86 +23,102 @@
 ---
 
 <p align="center">
-  A simple container that puts itself on hold until the other services declared in the <code>docker-compose.yml</code> are accessible via TCP.
+  Wait for container healthchecks before proceeding.
   <br>
   Available for <code>linux/amd64</code> and <code>linux/arm64</code> architectures.
   <br>
 </p>
 
+## Features
+
+- **TCP connectivity**: Wait for services to be accessible via TCP (using
+  `host:port` format)
+- **Shell command**: Execute arbitrary shell commands and wait for successful
+  completion
+- **Configurable timeouts**: Customizable sleep intervals and timeout periods
+- **User-friendly output**: Clear progress indicators and status messages
+- **Multi-architecture support**: Available for `linux/amd64` and `linux/arm64`
+
 ## Example usage:
 
-Sample `docker-compose.yml`:
+### TCP Connectivity
+
+Wait for services to accept TCP connections on specific ports:
 
 ```yaml
-version: '2'
 services:
-  mongo:
-    image: mongo:6
-    container_name: mongo
+  database:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_PASSWORD: secret
     ports:
-      - 27017:27017
-    networks:
-      - my-network
+      - "5432:5432"
 
-  redis:
-    container_name: redis
-    image: redis:6
+  cache:
+    image: redis:7-alpine
     ports:
-      - 6379:6379
-    networks:
-      - my-network
+      - "6379:6379"
 
-  server:
-    container_name: server
-    image: server
-    ports:
-      - 3000:3000
-    networks:
-      - my-network
-
-  start_dependencies:
-    image: drevops/docker-wait-for-dependencies:23.12.0
+  wait-for-dependencies:
+    image: drevops/docker-wait-for-dependencies:25.9.0
     depends_on:
-      - mongo
-      - redis
-    container_name: wait-for-dependencies
-    command: mongo:27017 redis:6379
-    networks:
-      - my-network
+      - database
+      - cache
+    command: database:5432 cache:6379
 ```
 
-Then, to guarantee that `mongo` and `redis` are ready before running `server`:
+### Combined TCP and Health Check Commands
+
+Wait for both TCP connectivity and custom health check endpoints:
+
+```yaml
+services:
+  api:
+    image: php:8.3-cli-alpine
+    ports:
+      - "8080:8080"
+    command: php -S 0.0.0.0:8080 -t /app
+
+  worker:
+    image: alpine:3.18
+    ports:
+      - "9000:9000"
+    command: nc -l -p 9000
+
+  wait-for-dependencies:
+    image: drevops/docker-wait-for-dependencies:25.9.0
+    depends_on:
+      - api
+      - worker
+    command:
+      - api:8080
+      - worker:9000
+      - "curl -f http://api:8080/health"
+      - "test -S /var/run/app.sock"
+```
+
+## Configuration
+
+The container supports the following environment variables:
+
+| Variable          | Default | Description                                                |
+|-------------------|---------|------------------------------------------------------------|
+| `SLEEP_LENGTH`    | `2`     | Time (in seconds) to wait between each check attempt       |
+| `TIMEOUT_LENGTH`  | `300`   | Maximum time (in seconds) to wait before giving up         |
+| `SUMMARY_ENABLED` | `true`  | Show summary message when all checks complete successfully |
+
+## Development & Maintenance
 
 ```bash
-$ docker-compose run --rm start_dependencies
-# Some output from docker compose
-$ docker-compose up server
+npm run lint # Lint shell scripts and Dockerfile
+npm run lint-fix # Auto-fix formatting issues
+npm run test-unit # Run unit tests for validation logic
+npm run test-functional # Run end-to-end tests with Docker
 ```
 
-By default, there will be a 2 second sleep time between each check. You can modify this by setting the `SLEEP_LENGTH` environment variable:
-
-```yaml
-  start_dependencies:
-    image: drevops/docker-wait-for-dependencies:23.12.0
-    environment:
-      - SLEEP_LENGTH: 0.5
-```
-
-By default, there will be a 300 seconds timeout before cancelling the wait_for. You can modify this by setting the `TIMEOUT_LENGTH` environment variable:
-
-```yaml
-  start_dependencies:
-    image: drevops/docker-wait-for-dependencies:23.12.0
-    environment:
-      - SLEEP_LENGTH: 1
-      - TIMEOUT_LENGTH: 60
-```
-
-## Acknowledgments
-
-The main functionality is based on
-the [docker-wait-for-dependencies](https://github.com/ducktors/docker-wait-for-dependencies) project.
-A special thank you to the contributors for their original work.
+A new version is automatically published to Docker Hub when a new GitHub release
+is created.
 
 ---
-_This repository was created using the [Scaffold](https://getscaffold.dev/) project template_
+_This repository was created using the [Scaffold](https://getscaffold.dev/)
+project template_

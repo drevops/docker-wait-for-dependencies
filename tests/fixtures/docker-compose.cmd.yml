@@ -1,0 +1,80 @@
+services:
+  service1:
+    image: php:8.3-cli-alpine
+    environment:
+      TEST_SERVICE1_SLEEP: ${TEST_SERVICE1_SLEEP:-5}
+    command: >
+      sh -lc "
+        set -eu
+        echo '<?php
+          $$response_delay = getenv(\"TEST_SERVICE1_RESPONSE_DELAY\") ?: 5;
+          $$slow_response_delay = getenv(\"TEST_SERVICE1_SLOW_RESPONSE_DELAY\") ?: 10;
+          $$path = $$_SERVER[\"REQUEST_URI\"];
+
+          // Write to Docker logs (stderr) on every request.
+          error_log(\"[service1] PHP server request: {$$path}\");
+
+          if ($$response_delay > 0) {
+            sleep($$response_delay);
+          }
+
+          header(\"Content-Type: application/json\");
+
+          if ($$path === \"/status\") {
+            http_response_code(200);
+            $$m = json_encode([\"status\" => \"healthy\", \"service\" => \"service1\", \"message\" => \"OK status\"]);
+            error_log(\"[service1] PHP server response: {$$m}\");
+            echo $$m;
+          }
+          elseif ($$path === \"/slow\") {
+            sleep($$slow_response_delay);
+            http_response_code(200);
+            $$m = json_encode([\"status\" => \"healthy\", \"service\" => \"service1\", \"message\" => \"OK slow\"]);
+            error_log(\"[service1] PHP server response: {$$m}\");
+            echo $$m;
+          }
+          else {
+            http_response_code(404);
+            $$m=json_encode([\"error\" => \"not found\"]);
+            error_log(\"[service1] PHP server response: {$$m}\");
+            echo $$m;
+          }
+        ' > /tmp/server.php
+
+        php -l /tmp/server.php
+
+        echo \"[service1] Sleeping for $${TEST_SERVICE1_SLEEP}s before listening...\"
+        sleep $${TEST_SERVICE1_SLEEP}
+        echo \"[service1] Starting PHP built-in server on port 8001 after sleep for $${TEST_SERVICE1_SLEEP}s\"
+        exec php -d log_errors=1 -d error_log=php://stdout -S 0.0.0.0:8001 /tmp/server.php
+      "
+    ports:
+      - "8001:8001"
+
+  service2:
+    image: alpine:3.18
+    environment:
+      TEST_SERVICE2_SLEEP: ${TEST_SERVICE2_SLEEP:-10}
+    command: >
+      sh -lc "
+        echo \"[service2] Sleeping for $${TEST_SERVICE2_SLEEP}s before listening...\"
+        sleep $${TEST_SERVICE2_SLEEP}
+        echo \"[service2] Starting netcat listener on port 8002 after sleep for $${TEST_SERVICE2_SLEEP}s\"
+        while true; do nc -l -p 8002 >/dev/null 2>&1; done
+      "
+    ports:
+      - "8002:8002"
+
+  wait-for-dependencies:
+    build: ../..
+    depends_on:
+      - service1
+      - service2
+    environment:
+      - SLEEP_LENGTH=${TEST_SLEEP_LENGTH:-1}
+      - TIMEOUT_LENGTH=${TEST_TIMEOUT_LENGTH:-30}
+      - SUMMARY_ENABLED=${TEST_SUMMARY_ENABLED:-true}
+    command:
+      - service1:8001
+      - service2:8002
+      - curl -f http://service1:8001/status | grep OK
