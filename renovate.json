@@ -1,17 +1,30 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "dependencyDashboard": true,
-  "automerge": true,
-  "customManagers": [
-    {
-      "customType": "regex",
-      "fileMatch": [
-        "(^|/)Dockerfile$",
-        "(^|/)Dockerfile\\.[^/]*$"
-      ],
-      "matchStrings": [
-        "#\\srenovate:\\sdatasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?( extractVersion=(?<extractVersion>.*?))?\\s(ENV|ARG) .*?_VERSION=(?<currentValue>.*)\\s"
-      ]
-    }
-  ]
+    "extends": [
+        "config:recommended"
+    ],
+    "dependencyDashboard": true,
+    "automerge": true,
+    "branchPrefix": "deps/",
+    "configMigration": true,
+    "pinDigests": true,
+    "enabledManagers": [
+        "custom.regex",
+        "docker-compose",
+        "dockerfile",
+        "github-actions",
+        "node"
+    ],
+    "customManagers": [
+        {
+            "customType": "regex",
+            "managerFilePatterns": [
+                "/^docker-compose\\.yml$/"
+            ],
+            "matchStrings": [
+                "IMAGE:\\s*\"?\\${(?:.*):-(?<depName>.*?):(?<currentValue>.*?)(?:\\@sha256:.*)?}\"?"
+            ],
+            "datasourceTemplate": "docker",
+            "versioningTemplate": "docker"
+        }
+    ]
 }
