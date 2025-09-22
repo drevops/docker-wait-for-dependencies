@@ -60,6 +60,16 @@ services:
     ports:
       - "6379:6379"
 
+  app:
+    image: alpine:3.22
+    depends_on:
+      # Will start only after the wait-for-dependencies finishes waiting
+      # for both database and cache to be reachable.
+      wait-for-dependencies:
+        condition: service_completed_successfully
+    ports:
+      - "8000:8000"
+
   wait-for-dependencies:
     image: drevops/docker-wait-for-dependencies:25.9.0
     depends_on:
@@ -85,6 +95,16 @@ services:
     ports:
       - "9000:9000"
     command: nc -l -p 9000
+
+  app:
+    image: alpine:3.22
+    depends_on:
+      # Will start only after the wait-for-dependencies finishes waiting
+      # for both api and worker to be reachable.
+      wait-for-dependencies:
+        condition: service_completed_successfully
+    ports:
+      - "8000:8000"
 
   wait-for-dependencies:
     image: drevops/docker-wait-for-dependencies:25.9.0
@@ -117,8 +137,31 @@ npm run test-unit # Run unit tests for validation logic
 npm run test-functional # Run end-to-end tests with Docker
 ```
 
-A new version is automatically published to Docker Hub when a new GitHub release
-is created.
+### Versioning
+
+This project uses [CalVer](https://calver.org/) versioning:
+
+- `YY`: Last two digits of the year, e.g., `25` for 2025.
+- `m`: Numeric month, e.g., April is `4`.
+- `patch`: Patch number for the month, starting at `0`.
+
+Example: `25.4.2` indicates the third patch in April 2025.
+
+### Releasing
+
+Releases are scheduled to occur at a minimum of once per month.
+
+The cross-platform images are built by GitHub actions and pushed to DockerHub:
+
+- `YY.m.patch` tag - when release tag is published on GitHub.
+- `latest` - when release tag is published on GitHub.
+- `canary` - on every push to `main` branch
+
+### Dependencies update
+
+Renovate bot is used to update dependencies. It creates a PR with the changes
+and automatically merges it if CI passes. These changes are then released as
+a `canary` version.
 
 ---
 _This repository was created using the [Scaffold](https://getscaffold.dev/)
