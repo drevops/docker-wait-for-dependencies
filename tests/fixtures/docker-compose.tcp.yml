@@ -27,6 +27,19 @@ services:
     ports:
       - "8002:8002"
 
+  service3:
+    image: alpine:3.18
+    depends_on:
+      wait-for-dependencies:
+        condition: service_completed_successfully
+    command: >
+      sh -lc "
+        echo \"[service3] Ready\"
+        while true; do nc -l -p 8003 >/dev/null 2>&1; done
+      "
+    ports:
+      - "8003:8003"
+
   wait-for-dependencies:
     build: ../..
     depends_on:

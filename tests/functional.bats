@@ -17,6 +17,7 @@ load _loader
   assert_success
   assert_output_contains "service1"
   assert_output_contains "service2"
+  assert_output_contains "service3"
   assert_output_not_contains "wait-for-dependencies"
 
   step "Assert the logs content."
@@ -51,6 +52,7 @@ load _loader
   assert_success
   assert_output_contains "service1"
   assert_output_contains "service2"
+  assert_output_contains "service3"
   assert_output_not_contains "wait-for-dependencies"
 
   step "Assert the logs content."
