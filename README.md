@@ -10,6 +10,7 @@
 [![GitHub Issues](https://img.shields.io/github/issues/DrevOps/docker-wait-for-dependencies.svg)](https://github.com/DrevOps/docker-wait-for-dependencies/issues)
 [![GitHub Pull Requests](https://img.shields.io/github/issues-pr/DrevOps/docker-wait-for-dependencies.svg)](https://github.com/DrevOps/docker-wait-for-dependencies/pulls)
 [![Test](https://github.com/drevops/docker-wait-for-dependencies/actions/workflows/test.yml/badge.svg)](https://github.com/drevops/docker-wait-for-dependencies/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/drevops/docker-wait-for-dependencies/graph/badge.svg?token=BZK6852630)](https://codecov.io/gh/drevops/docker-wait-for-dependencies)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/DrevOps/docker-wait-for-dependencies)
 ![LICENSE](https://img.shields.io/github/license/DrevOps/docker-wait-for-dependencies)
 ![Renovate](https://img.shields.io/badge/renovate-enabled-green?logo=renovatebot)
