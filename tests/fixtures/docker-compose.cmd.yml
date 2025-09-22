@@ -52,7 +52,7 @@ services:
       - "8001:8001"
 
   service2:
-    image: alpine:3.18
+    image: alpine:3.22
     environment:
       TEST_SERVICE2_SLEEP: ${TEST_SERVICE2_SLEEP:-10}
     command: >
