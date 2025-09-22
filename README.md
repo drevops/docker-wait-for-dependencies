@@ -24,7 +24,7 @@
 ---
 
 <p align="center">
-  Wait for container healthchecks before proceeding.
+  Container to wait for container healthchecks before proceeding with the stack start
   <br>
   Available for <code>linux/amd64</code> and <code>linux/arm64</code> architectures.
   <br>
