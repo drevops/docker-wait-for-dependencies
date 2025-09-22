@@ -1,6 +1,6 @@
 services:
   service1:
-    image: php:8.3-cli-alpine
+    image: php:8.4-cli-alpine
     environment:
       TEST_SERVICE1_SLEEP: ${TEST_SERVICE1_SLEEP:-5}
     command: >
