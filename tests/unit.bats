@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# shellcheck disable=SC2317,SC2034,SC1090,SC2030,SC2031
+# shellcheck disable=SC2317,SC2034,SC1090,SC2030,SC2031,SC2329
 
 export SUT_SCRIPT="${BATS_TEST_DIRNAME}/../entrypoint.sh"
 
