@@ -1,30 +1,30 @@
 {
-    "extends": [
-        "config:recommended"
-    ],
-    "dependencyDashboard": true,
+    "extends": ["config:recommended"],
     "automerge": true,
-    "branchPrefix": "deps/",
-    "configMigration": true,
+    "rangeStrategy": "bump",
+    "dependencyDashboard": true,
     "pinDigests": true,
-    "enabledManagers": [
-        "custom.regex",
-        "docker-compose",
-        "dockerfile",
-        "github-actions",
-        "npm"
-    ],
-    "customManagers": [
+    "branchPrefix": "deps/",
+    "packageRules": [
         {
-            "customType": "regex",
-            "managerFilePatterns": [
-                "/^docker-compose\\.yml$/"
-            ],
-            "matchStrings": [
-                "IMAGE:\\s*\"?\\${(?:.*):-(?<depName>.*?):(?<currentValue>.*?)(?:\\@sha256:.*)?}\"?"
-            ],
-            "datasourceTemplate": "docker",
-            "versioningTemplate": "docker"
+            "matchDepNames": ["php"],
+            "matchManagers": ["composer"],
+            "enabled": false
+        },
+        {
+            "matchDepNames": ["node", "yarn"],
+            "matchManagers": ["npm"],
+            "enabled": false
+        },
+        {
+            "matchManagers": ["npm", "composer"],
+            "matchUpdateTypes": ["major"],
+            "enabled": false
+        },
+        {
+            "matchPackageNames": ["*"],
+            "groupName": "all dependencies",
+            "groupSlug": "all"
         }
     ]
 }
