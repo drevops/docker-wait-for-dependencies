@@ -53,7 +53,7 @@ wait_tcp() {
 
     # Print "still waiting" every ~10s, but not on first iteration
     if ((elapsed_time > 0 && elapsed_time % 10 == 0 && elapsed_time != last_still_waiting)); then
-      echo "… still waiting (elapsed ${elapsed_time}s, timeout ${TIMEOUT_LENGTH}s)"
+      echo "… still waiting (tcp): ${host}:${port} (elapsed ${elapsed_time}s, timeout ${TIMEOUT_LENGTH}s)"
       last_still_waiting=$elapsed_time
     fi
 
@@ -81,7 +81,7 @@ wait_cmd() {
 
     # Print "still waiting" every ~10s, but not on first iteration
     if ((elapsed_time > 0 && elapsed_time % 10 == 0 && elapsed_time != last_still_waiting)); then
-      echo "… still waiting (elapsed ${elapsed_time}s, timeout ${TIMEOUT_LENGTH}s)"
+      echo "… still waiting (cmd): ${cmd} (elapsed ${elapsed_time}s, timeout ${TIMEOUT_LENGTH}s)"
       last_still_waiting=$elapsed_time
     fi
 
