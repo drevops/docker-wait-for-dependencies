@@ -15,8 +15,8 @@ setup() {
   # Setup command mocking.
   setup_mock
 
-  if [ -n "${SUT_SCRIPT-}" ]; then
-    [ ! -f "${SUT_SCRIPT}" ] && echo "SUT_SCRIPT file not found: ${SUT_SCRIPT}" && exit 1
+  if [[ -n ${SUT_SCRIPT-} ]]; then
+    [[ ! -f ${SUT_SCRIPT} ]] && echo "SUT_SCRIPT file not found: ${SUT_SCRIPT}" && exit 1
     export TIMEOUT_LENGTH=1
     source "${SUT_SCRIPT}"
   fi

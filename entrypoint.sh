@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-[ "${DEBUG:-}" = "1" ] && set -x
+[[ ${DEBUG:-} == "1" ]] && set -x
 
 SLEEP_LENGTH="${SLEEP_LENGTH:-2}"
 TIMEOUT_LENGTH="${TIMEOUT_LENGTH:-300}"
