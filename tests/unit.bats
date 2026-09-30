@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-# shellcheck disable=SC2317,SC2034,SC1090,SC2030,SC2031,SC2329
+# shellcheck disable=SC2317,SC2034,SC2030,SC2031,SC2329
 
 export SUT_SCRIPT="${BATS_TEST_DIRNAME}/../entrypoint.sh"
 
@@ -184,7 +184,6 @@ load _loader
 
 @test "wait_cmd: command execution and timeout" {
   dataprovider_run_callback() {
-    source "$SUT_SCRIPT" >/dev/null 2>&1
     case "${2}" in
       "success")
         output=$(wait_cmd "${1}" 2>&1)
@@ -233,8 +232,6 @@ load _loader
 }
 
 @test "wait_cmd: return codes and basic functionality" {
-  source "$SUT_SCRIPT" >/dev/null 2>&1
-
   # Test successful command returns 0
   run wait_cmd "true"
   assert_success
