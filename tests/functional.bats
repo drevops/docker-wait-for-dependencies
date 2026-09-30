@@ -5,7 +5,7 @@ load _loader
 @test "tcp" {
   pushd "${FIXTURES_DIR}" >/dev/null || exit 1
 
-  step "Start the stack"
+  step "Start the stack."
   run docker compose -f docker-compose.tcp.yml up -d --build --force-recreate
   assert_success
 
@@ -40,7 +40,7 @@ load _loader
 @test "cmd" {
   pushd "${FIXTURES_DIR}" >/dev/null || exit 1
 
-  step "Start the stack"
+  step "Start the stack."
   run docker compose -f docker-compose.cmd.yml up -d --build --force-recreate
   assert_success
 
