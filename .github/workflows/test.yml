@@ -51,7 +51,7 @@ jobs:
 
       - name: Upload coverage report to Codecov
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
-        if: ${{ env.CODECOV_TOKEN != '' }}
+        if: env.CODECOV_TOKEN != ''
         with:
           directory: .coverage-html
           fail_ci_if_error: true
