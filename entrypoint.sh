@@ -7,20 +7,20 @@ TIMEOUT_LENGTH="${TIMEOUT_LENGTH:-300}"
 SUMMARY_ENABLED="${SUMMARY_ENABLED:-true}"
 
 is_host_port() {
-  local token="$1"
+  local target="$1"
 
   # Reject if contains protocol, spaces, or slashes
-  if [[ $token == *"://"* ]] || [[ $token == *" "* ]] || [[ $token == *"/"* ]]; then
+  if [[ $target == *"://"* ]] || [[ $target == *" "* ]] || [[ $target == *"/"* ]]; then
     return 1
   fi
 
   # Must contain exactly one colon
-  if [[ ${token//[^:]/} != ":" ]]; then
+  if [[ ${target//[^:]/} != ":" ]]; then
     return 1
   fi
 
-  local host="${token%:*}"
-  local port="${token#*:}"
+  local host="${target%:*}"
+  local port="${target#*:}"
 
   # Host validation: alphanumeric, dots, hyphens, underscores only
   if [[ ! $host =~ ^[A-Za-z0-9._-]+$ ]] || [[ -z $host ]]; then
