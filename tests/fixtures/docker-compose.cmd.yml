@@ -22,22 +22,22 @@ services:
 
           if ($$path === \"/status\") {
             http_response_code(200);
-            $$m = json_encode([\"status\" => \"healthy\", \"service\" => \"service1\", \"message\" => \"OK status\"]);
-            error_log(\"[service1] PHP server response: {$$m}\");
-            echo $$m;
+            $$response_body = json_encode([\"status\" => \"healthy\", \"service\" => \"service1\", \"message\" => \"OK status\"]);
+            error_log(\"[service1] PHP server response: {$$response_body}\");
+            echo $$response_body;
           }
           elseif ($$path === \"/slow\") {
             sleep($$slow_response_delay);
             http_response_code(200);
-            $$m = json_encode([\"status\" => \"healthy\", \"service\" => \"service1\", \"message\" => \"OK slow\"]);
-            error_log(\"[service1] PHP server response: {$$m}\");
-            echo $$m;
+            $$response_body = json_encode([\"status\" => \"healthy\", \"service\" => \"service1\", \"message\" => \"OK slow\"]);
+            error_log(\"[service1] PHP server response: {$$response_body}\");
+            echo $$response_body;
           }
           else {
             http_response_code(404);
-            $$m=json_encode([\"error\" => \"not found\"]);
-            error_log(\"[service1] PHP server response: {$$m}\");
-            echo $$m;
+            $$response_body=json_encode([\"error\" => \"not found\"]);
+            error_log(\"[service1] PHP server response: {$$response_body}\");
+            echo $$response_body;
           }
         ' > /tmp/server.php
 
