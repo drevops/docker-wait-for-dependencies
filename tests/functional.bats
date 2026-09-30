@@ -10,10 +10,10 @@ load _loader
   assert_success
 
   step "Wait for the wait-for-dependencies container to exit."
-  wait_for_cmd 30 2 bash -c "docker compose -f docker-compose.cmd.yml ps --status=exited | grep wait-for-dependencies"
+  wait_for_cmd 30 2 bash -c "docker compose -f docker-compose.tcp.yml ps --status=exited | grep wait-for-dependencies"
 
   step "Assert that the services are running."
-  run docker compose -f docker-compose.cmd.yml ps --status=running
+  run docker compose -f docker-compose.tcp.yml ps --status=running
   assert_success
   assert_output_contains "service1"
   assert_output_contains "service2"
@@ -21,7 +21,7 @@ load _loader
   assert_output_not_contains "wait-for-dependencies"
 
   step "Assert the logs content."
-  run docker compose -f docker-compose.cmd.yml logs
+  run docker compose -f docker-compose.tcp.yml logs
   assert_success
 
   assert_output_contains "[service1] Sleeping for 5s before listening"
