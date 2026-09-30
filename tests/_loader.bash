@@ -2,17 +2,14 @@
 # shellcheck disable=SC1090
 
 setup() {
-  # Register a path to libraries.
   export BATS_LIB_PATH="${BATS_TEST_DIRNAME}/../node_modules"
 
   export FIXTURES_DIR="${BATS_TEST_DIRNAME}/fixtures"
 
-  # Load 'bats-helpers' library.
   ASSERT_DIR_EXCLUDE=("vortex" ".data")
   export ASSERT_DIR_EXCLUDE
   bats_load_library bats-helpers
 
-  # Setup command mocking.
   setup_mock
 
   if [[ -n ${SUT_SCRIPT-} ]]; then

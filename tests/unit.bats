@@ -213,9 +213,9 @@ load _loader
 }
 
 @test "wait_cmd: still waiting names the command" {
-  # Mock 'date' so elapsed time jumps straight to the 10s progress mark and
-  # then past the timeout. This keeps the test instant and deterministic
-  # without real sleeping or relying on wall-clock timing.
+  # Mock 'date' so elapsed time reaches the 10s progress mark and then
+  # exceeds the timeout. The test then runs without real sleeping or
+  # wall-clock timing, so it is instant and deterministic.
   mock_date=$(mock_command date)
   mock_set_output "$mock_date" 1000 1
   mock_set_output "$mock_date" 1010 2
@@ -232,17 +232,14 @@ load _loader
 }
 
 @test "wait_cmd: return codes and basic functionality" {
-  # Test successful command returns 0
   run wait_cmd "true"
   assert_success
 
-  # Test failing command with timeout returns 1
   export TIMEOUT_LENGTH=1
   run wait_cmd "false"
   assert_failure
   assert_equal "$status" 1
 
-  # Test basic output format
   run wait_cmd "true"
   assert_success
   assert_output_contains "Waiting (cmd): true"
@@ -252,14 +249,12 @@ load _loader
 @test "wait_tcp: connection check and timeout" {
   mock_nc=$(mock_command nc)
 
-  # Reachable host: 'nc' succeeds immediately.
   mock_set_status "$mock_nc" 0
   run wait_tcp myhost 1234
   assert_success
   assert_output_contains "Waiting (tcp): myhost:1234"
   assert_output_contains "✓ Ready (tcp): myhost:1234"
 
-  # Unreachable host: 'nc' keeps failing until the timeout is reached.
   mock_set_status "$mock_nc" 1
   export TIMEOUT_LENGTH=1
   export SLEEP_LENGTH=1
@@ -273,9 +268,9 @@ load _loader
   mock_nc=$(mock_command nc)
   mock_set_status "$mock_nc" 1
 
-  # Mock 'date' so elapsed time jumps straight to the 10s progress mark and
-  # then past the timeout. This keeps the test instant and deterministic
-  # without real sleeping or relying on wall-clock timing.
+  # Mock 'date' so elapsed time reaches the 10s progress mark and then
+  # exceeds the timeout. The test then runs without real sleeping or
+  # wall-clock timing, so it is instant and deterministic.
   mock_date=$(mock_command date)
   mock_set_output "$mock_date" 1000 1
   mock_set_output "$mock_date" 1010 2
@@ -294,12 +289,10 @@ load _loader
 @test "wait_tcp: return codes and basic functionality" {
   mock_nc=$(mock_command nc)
 
-  # Reachable host returns 0.
   mock_set_status "$mock_nc" 0
   run wait_tcp myhost 1234
   assert_success
 
-  # Unreachable host with timeout returns 1.
   mock_set_status "$mock_nc" 1
   export TIMEOUT_LENGTH=1
   export SLEEP_LENGTH=1

@@ -9,12 +9,11 @@ SUMMARY_ENABLED="${SUMMARY_ENABLED:-true}"
 is_host_port() {
   local target="$1"
 
-  # Reject if contains protocol, spaces, or slashes
   if [[ $target == *"://"* ]] || [[ $target == *" "* ]] || [[ $target == *"/"* ]]; then
     return 1
   fi
 
-  # Must contain exactly one colon
+  # Must contain exactly 1 colon
   if [[ ${target//[^:]/} != ":" ]]; then
     return 1
   fi
@@ -22,12 +21,10 @@ is_host_port() {
   local host="${target%:*}"
   local port="${target#*:}"
 
-  # Host validation: alphanumeric, dots, hyphens, underscores only
   if [[ ! $host =~ ^[A-Za-z0-9._-]+$ ]] || [[ -z $host ]]; then
     return 1
   fi
 
-  # Port validation: numeric only, 1-5 digits, range 1-65535
   if [[ ! $port =~ ^[0-9]{1,5}$ ]] || ((port < 1 || port > 65535)); then
     return 1
   fi
