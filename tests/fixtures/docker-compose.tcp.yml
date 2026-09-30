@@ -46,7 +46,7 @@ services:
       - service1
       - service2
     environment:
-      - SLEEP_LENGTH=${TEST_SLEEP_LENGTH:-1}
-      - TIMEOUT_LENGTH=${TEST_TIMEOUT_LENGTH:-30}
-      - SUMMARY_ENABLED=${TEST_SUMMARY_ENABLED:-true}
+      SLEEP_LENGTH: ${TEST_SLEEP_LENGTH:-1}
+      TIMEOUT_LENGTH: ${TEST_TIMEOUT_LENGTH:-30}
+      SUMMARY_ENABLED: ${TEST_SUMMARY_ENABLED:-true}
     command: service1:8001 service2:8002
