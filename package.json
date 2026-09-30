@@ -6,7 +6,7 @@
     "lint-fix": "shfmt -i 2 -ci -s -w entrypoint.sh tests/*.bats tests/*.bash",
     "test-coverage": "kcov --include-pattern=.sh,.bash --bash-parse-files-in-dir=. --exclude-pattern=vendor,node_modules,.coverage-html,tests .coverage-html bats tests/unit.bats",
     "test-unit": "bats --tap --verbose-run tests/unit.bats",
-    "test-functional": "bats --verbose-run -t tests/functional.bats"
+    "test-functional": "bats --tap --verbose-run tests/functional.bats"
   },
   "repository": {
     "type": "git",
