@@ -72,7 +72,7 @@ services:
       - "8000:8000"
 
   wait-for-dependencies:
-    image: drevops/docker-wait-for-dependencies:25.9.0
+    image: drevops/docker-wait-for-dependencies:26.10.0
     depends_on:
       - database
       - cache
@@ -108,7 +108,7 @@ services:
       - "8000:8000"
 
   wait-for-dependencies:
-    image: drevops/docker-wait-for-dependencies:25.9.0
+    image: drevops/docker-wait-for-dependencies:26.10.0
     depends_on:
       - api
       - worker
