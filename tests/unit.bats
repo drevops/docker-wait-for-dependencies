@@ -243,7 +243,8 @@ load _loader
   assert_equal "$status" 1
 
   # Test basic output format
-  output=$(wait_cmd "true" 2>&1)
+  run wait_cmd "true"
+  assert_success
   assert_output_contains "Waiting (cmd): true"
   assert_output_contains "✓ Ready (cmd): true"
 }
