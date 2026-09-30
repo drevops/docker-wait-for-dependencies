@@ -24,11 +24,11 @@ load _loader
   run docker compose -f docker-compose.tcp.yml logs
   assert_success
 
-  assert_output_contains "[service1] Sleeping for 5s before listening"
+  assert_output_contains "[service1] Sleeping for 5s before listening..."
   assert_output_contains "[service1] Starting netcat listener on port 8001 after sleep for 5s"
   assert_output_contains "✓ Ready (tcp): service1:8001"
 
-  assert_output_contains "[service2] Sleeping for 10s before listening"
+  assert_output_contains "[service2] Sleeping for 10s before listening..."
   assert_output_contains "[service2] Starting netcat listener on port 8002 after sleep for 10s"
   assert_output_contains "✓ Ready (tcp): service2:8002"
 
