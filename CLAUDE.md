@@ -26,7 +26,7 @@ The project creates a minimal Alpine Linux Docker image (`drevops/docker-wait-fo
 
 ### Environment Variables
 - `SLEEP_LENGTH` (default: 2): Seconds between check attempts
-- `TIMEOUT_LENGTH` (default: 300): Maximum wait time for each target; an attempt still running when it passes is stopped
+- `TIMEOUT_LENGTH` (default: 300): Wait time for each target; an attempt still running when it passes is stopped, and the attempt after the last sleep always gets at least 1s, so a target can overrun by up to `SLEEP_LENGTH` + 1s
 - `SUMMARY_ENABLED` (default: true): Show completion summary
 - `DEBUG` (default: unset): Set to `1` to trace every command with `set -x`
 

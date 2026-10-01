@@ -126,11 +126,13 @@ The container supports the following environment variables:
 | Variable          | Default | Description                                                |
 |-------------------|---------|------------------------------------------------------------|
 | `SLEEP_LENGTH`    | `2`     | Time (in seconds) to wait between each check attempt       |
-| `TIMEOUT_LENGTH`  | `300`   | Maximum time (in seconds) to wait for each target          |
+| `TIMEOUT_LENGTH`  | `300`   | Time (in seconds) to wait for each target before giving up |
 | `SUMMARY_ENABLED` | `true`  | Show summary message when all checks complete successfully |
 | `DEBUG`           | unset   | Trace each command as it runs (`set -x`) when set to `1`   |
 
-The container stops a check that's still running when `TIMEOUT_LENGTH` runs out, so a hung `curl` can't keep your stack waiting. The check and every process it started get `SIGKILL`, which they can't ignore or trap, so a stopped check never counts as ready. If one of your checks legitimately needs more time, raise `TIMEOUT_LENGTH`. The container also stops anything a finished check left running in the background.
+The container stops a check that's still running when `TIMEOUT_LENGTH` runs out, so a hung `curl` can't keep your stack waiting. It sends `SIGKILL` to the check's process group, which holds the check and every process it starts. Nothing in the group can ignore or trap that signal, so a stopped check never counts as ready. If one of your checks legitimately needs more time, raise `TIMEOUT_LENGTH`.
+
+The attempt after the last sleep always gets at least 1 second, so a target can run past `TIMEOUT_LENGTH` by up to `SLEEP_LENGTH` plus 1 second. The container also stops anything a finished check left running in its process group. A process that detaches into its own session, for example with `setsid`, leaves the group and keeps running.
 
 ## Development & Maintenance
 
