@@ -7,9 +7,6 @@
     "branchPrefix": "deps/",
     "configMigration": true,
     "pinDigests": true,
-    "ignorePaths": [
-        "**/node_modules/**"
-    ],
     "enabledManagers": [
         "docker-compose",
         "dockerfile",
