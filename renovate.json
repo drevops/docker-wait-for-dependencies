@@ -8,23 +8,9 @@
     "configMigration": true,
     "pinDigests": true,
     "enabledManagers": [
-        "custom.regex",
         "docker-compose",
         "dockerfile",
         "github-actions",
         "npm"
-    ],
-    "customManagers": [
-        {
-            "customType": "regex",
-            "managerFilePatterns": [
-                "/^docker-compose\\.yml$/"
-            ],
-            "matchStrings": [
-                "IMAGE:\\s*\"?\\${(?:.*):-(?<depName>.*?):(?<currentValue>.*?)(?:\\@sha256:.*)?}\"?"
-            ],
-            "datasourceTemplate": "docker",
-            "versioningTemplate": "docker"
-        }
     ]
 }
