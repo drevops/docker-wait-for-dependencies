@@ -16,14 +16,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    env:
-      # renovate: datasource=github-releases depName=koalaman/shellcheck extractVersion=^v(?<version>.+)$
-      SHELLCHECK_VERSION: 0.11.0
-      # renovate: datasource=github-releases depName=mvdan/sh extractVersion=^v(?<version>.+)$
-      SHFMT_VERSION: 3.14.1
-      # renovate: datasource=github-releases depName=SimonKagstrom/kcov extractVersion=^v(?<version>.+)$
-      KCOV_VERSION: 43
-
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -35,18 +27,22 @@ jobs:
         with:
           node-version: 24
 
+      - name: Lint shell scripts
+        uses: luizm/action-sh-checker@883217215b11c1fabbf00eb1a9a041f62d74c744 # v0.10.0
+        env:
+          SHFMT_OPTS: -i 2 -ci -s -d
+        with:
+          sh_checker_exclude: node_modules
+        continue-on-error: ${{ vars.CI_LINT_IGNORE_FAILURE == '1' }}
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
+        with:
+          dockerfile: Dockerfile
+        continue-on-error: ${{ vars.CI_LINT_IGNORE_FAILURE == '1' }}
+
       - name: Install dependencies
         run: npm ci
-
-      - name: Install ShellCheck and shfmt
-        uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.22
-        with:
-          tool: shellcheck@${{ env.SHELLCHECK_VERSION }},shfmt@${{ env.SHFMT_VERSION }}
-          fallback: none
-
-      - name: Lint code
-        run: npm run lint
-        continue-on-error: ${{ vars.CI_LINT_IGNORE_FAILURE == '1' }}
 
       - name: Install Kcov
         # 'npm run test-coverage' reports on the shell scripts it finds in the
@@ -60,6 +56,9 @@ jobs:
           cmake --build kcov/build --parallel "$(nproc)"
           sudo cmake --install kcov/build
           kcov --version
+        env:
+          # renovate: datasource=github-releases depName=SimonKagstrom/kcov extractVersion=^v(?<version>.+)$
+          KCOV_VERSION: 43
 
       - name: Run unit tests with code coverage
         run: npm run test-coverage
