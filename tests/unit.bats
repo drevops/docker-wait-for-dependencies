@@ -195,9 +195,9 @@ load _loader
   TEST_CASES=(
     30 "exit 0" "status 0"
     30 "exit 3" "status 3"
-    # Stopped with SIGTERM, or with SIGKILL when SIGTERM is ignored.
-    1 "sleep 30" "status 143"
-    1 "trap '' TERM; sleep 30" "status 137"
+    # Stopped with SIGKILL, even when the command traps SIGTERM.
+    1 "sleep 30" "status 137"
+    1 "trap 'exit 0' TERM; sleep 30" "status 137"
   )
   dataprovider_run "dataprovider_run_callback" 3
 }
@@ -229,9 +229,10 @@ load _loader
     "cmd" "sleep 30 | cat" "stopped"
     "cmd" "sleep 30 & wait" "stopped"
     "cmd" "trap '' TERM; sleep 30" "stopped"
+    "cmd" "trap 'exit 0' TERM; sleep 30" "stopped"
     "cmd" "sleep 30 & false" "stopped"
     "tcp" "sleep 30" "stopped"
-    "tcp" "trap '' TERM; sleep 30" "stopped"
+    "tcp" "trap 'exit 0' TERM; sleep 30" "stopped"
   )
   dataprovider_run "dataprovider_run_callback" 3
 }

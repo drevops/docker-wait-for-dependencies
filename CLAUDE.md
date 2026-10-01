@@ -16,7 +16,7 @@ The project creates a minimal Alpine Linux Docker image (`drevops/docker-wait-fo
 ### Core Components
 - **`entrypoint.sh`**: Main shell script containing all logic
   - `is_host_port()` function: Validates host:port format with strict regex validation
-  - `stop_probe_after()` function: Watchdog that sends `SIGTERM` to a probe's process group once its time is up, then `SIGKILL` 1s later
+  - `stop_probe_after()` function: Watchdog that sends `SIGKILL` to a probe's process group once its time is up, so a probe that traps `SIGTERM` can't exit 0 and pass as ready
   - `run_probe()` function: Runs 1 attempt in its own process group (`set -m`) with a `stop_probe_after()` watchdog, returns the probe's exit status, and kills whatever the attempt left running; every attempt gets at least 1s
   - `wait_probe()` function: Shared poll loop that retries a probe through `run_probe()`, capping each attempt at the time left, until it succeeds or `TIMEOUT_LENGTH` passes, with a "still waiting" notice at most once every 10s
   - `wait_tcp()` function: Checks TCP connectivity with `nc -z` through `wait_probe()`
