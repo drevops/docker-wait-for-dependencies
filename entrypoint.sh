@@ -49,8 +49,7 @@ wait_probe() {
       return 1
     fi
 
-    # Print "still waiting" every ~10s, but not on first iteration
-    if ((elapsed_time > 0 && elapsed_time % 10 == 0 && elapsed_time != last_still_waiting)); then
+    if ((elapsed_time - last_still_waiting >= 10)); then
       echo "… still waiting (${kind}): ${label} (elapsed ${elapsed_time}s, timeout ${TIMEOUT_LENGTH}s)"
       last_still_waiting=$elapsed_time
     fi
