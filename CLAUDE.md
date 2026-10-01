@@ -14,17 +14,19 @@ The project creates a minimal Alpine Linux Docker image (`drevops/docker-wait-fo
 ## Architecture
 
 ### Core Components
-- **`entrypoint.sh`**: Main shell script containing all logic (lines 95-125 in main function)
+- **`entrypoint.sh`**: Main shell script containing all logic
   - `is_host_port()` function: Validates host:port format with strict regex validation
-  - `wait_tcp()` function: Uses netcat for TCP connectivity checks  
-  - `wait_cmd()` function: Executes shell commands for custom health checks
-- **`Dockerfile`**: Minimal Alpine 3.22.1 base with bash and curl
+  - `wait_probe()` function: Shared poll loop that retries a probe until it succeeds or `TIMEOUT_LENGTH` passes, with a "still waiting" notice at most once every 10s
+  - `wait_tcp()` function: Checks TCP connectivity with `nc -z` through `wait_probe()`
+  - `wait_cmd()` function: Runs a shell command health check with `bash -c` through `wait_probe()`
+- **`Dockerfile`**: Minimal Alpine base with bash and curl
 - **Test fixtures**: Docker Compose files for TCP (`docker-compose.tcp.yml`) and command-based (`docker-compose.cmd.yml`) testing
 
 ### Environment Variables
 - `SLEEP_LENGTH` (default: 2): Seconds between check attempts
 - `TIMEOUT_LENGTH` (default: 300): Maximum wait time before timeout
 - `SUMMARY_ENABLED` (default: true): Show completion summary
+- `DEBUG` (default: unset): Set to `1` to trace every command with `set -x`
 
 ## Development Commands
 
@@ -37,14 +39,15 @@ npm run lint-fix  # Auto-fix shell script formatting with shfmt
 ### Testing
 ```bash
 npm run test-unit       # Run unit tests with BATS (tests/unit.bats)
+npm run test-coverage   # Run unit tests under kcov, writing .coverage-html (what CI runs)
 npm run test-functional # Run functional tests with Docker Compose (tests/functional.bats)
 ```
 
-Unit tests focus on the `is_host_port()` validation function using extensive data provider patterns. Functional tests use Docker Compose to verify real TCP and command-based waiting scenarios.
+Unit tests cover `is_host_port()` validation, `wait_tcp()` and `wait_cmd()` with mocked `nc` and `date`, and the entrypoint's exit codes and summary, using data providers where cases repeat. Functional tests use Docker Compose to verify real TCP and command-based waiting scenarios.
 
 ### Test Framework
 - **BATS** (Bash Automated Testing System) with `@drevops/bats-helpers` library
-- **Test structure**: `tests/_loader.bash` provides setup/teardown and utilities
+- **Test structure**: `tests/_loader.bash` provides `setup()`, the `container_cleanup()` helper and utilities; `tests/functional.bats` runs the cleanup before the suite and after each test
 - **Docker integration**: Tests build and run the container with test services
 - **Fixtures**: Separate compose files for TCP vs command testing scenarios
 
@@ -61,6 +64,7 @@ wait-for-dependencies:
 
 ## Release Process
 
-- GitHub Actions automatically publish Docker images on new releases
-- Multi-architecture support: `linux/amd64` and `linux/arm64`
-- Versioning follows semantic versioning (e.g., `23.12.0`)
+- `draft-release-notes.yml` drafts the next release on every push to `main`; the `RELEASE_VERSION_SCHEME` repository variable is `calver`, so drafts are named `YY.M.0`
+- `release-docker.yml` builds and pushes the image for `linux/amd64` and `linux/arm64` on every tag push
+- `test.yml` pushes the `canary` image after tests pass on `main`
+- Versioning follows CalVer `YY.M.patch` (e.g., `26.10.0`)
