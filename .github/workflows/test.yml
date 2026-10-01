@@ -16,25 +16,60 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    container:
-      # https://hub.docker.com/r/drevops/ci-runner
-      image: drevops/ci-runner:26.8.0@sha256:80be478cfff66d81fa804ccc707dbeae478655d8b850f1ae06824c194bd6528e
-
     steps:
-      - name: Preserve $HOME set in the container
-        run: echo HOME=/root >> "$GITHUB_ENV" # https://github.com/actions/runner/issues/863
-
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+
       - name: Install dependencies
         run: npm ci
+
+      - name: Install ShellCheck
+        working-directory: ${{ runner.temp }}
+        run: |
+          curl -fsSLO "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
+          tar -xJf "shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
+          sudo install -m 0755 "shellcheck-${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/shellcheck
+          shellcheck --version
+        env:
+          # renovate: datasource=github-releases depName=koalaman/shellcheck
+          SHELLCHECK_VERSION: v0.11.0
+
+      - name: Install shfmt
+        working-directory: ${{ runner.temp }}
+        run: |
+          curl -fsSL -o shfmt "https://github.com/mvdan/sh/releases/download/${SHFMT_VERSION}/shfmt_${SHFMT_VERSION}_linux_amd64"
+          sudo install -m 0755 shfmt /usr/local/bin/shfmt
+          shfmt --version
+        env:
+          # renovate: datasource=github-releases depName=mvdan/sh
+          SHFMT_VERSION: v3.14.1
 
       - name: Lint code
         run: npm run lint
         continue-on-error: ${{ vars.CI_LINT_IGNORE_FAILURE == '1' }}
+
+      - name: Install Kcov
+        # 'npm run test-coverage' reports on the shell scripts it finds in the
+        # workspace, so the kcov sources stay out of it.
+        working-directory: ${{ runner.temp }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binutils-dev build-essential cmake git libcurl4-openssl-dev libdw-dev libiberty-dev libssl-dev python3 zlib1g-dev
+          git clone --depth 1 --branch "${KCOV_VERSION}" https://github.com/SimonKagstrom/kcov.git
+          cmake -S kcov -B kcov/build
+          cmake --build kcov/build --parallel "$(nproc)"
+          sudo cmake --install kcov/build
+          kcov --version
+        env:
+          # renovate: datasource=github-releases depName=SimonKagstrom/kcov
+          KCOV_VERSION: v43
 
       - name: Run unit tests with code coverage
         run: npm run test-coverage
