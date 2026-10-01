@@ -1,6 +1,6 @@
 services:
   service1:
-    image: php:8.4-cli-alpine@sha256:37c8c64177612b72e7f9d2c00481739c166a3708bea27c1cfd27fea1291d82d1
+    image: php:8.5-cli-alpine@sha256:93684051146ec037620855feb77f278090bde45ddc030801cd3f2a7685bc4deb
     environment:
       TEST_SERVICE1_SLEEP: ${TEST_SERVICE1_SLEEP:-5}
       TEST_SERVICE1_RESPONSE_DELAY: ${TEST_SERVICE1_RESPONSE_DELAY:-5}
