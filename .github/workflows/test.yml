@@ -16,6 +16,14 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      # renovate: datasource=github-releases depName=koalaman/shellcheck extractVersion=^v(?<version>.+)$
+      SHELLCHECK_VERSION: 0.11.0
+      # renovate: datasource=github-releases depName=mvdan/sh extractVersion=^v(?<version>.+)$
+      SHFMT_VERSION: 3.14.1
+      # renovate: datasource=github-releases depName=SimonKagstrom/kcov extractVersion=^v(?<version>.+)$
+      KCOV_VERSION: 43
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -30,26 +38,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install ShellCheck
-        working-directory: ${{ runner.temp }}
-        run: |
-          curl -fsSLO "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
-          tar -xJf "shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
-          sudo install -m 0755 "shellcheck-${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/shellcheck
-          shellcheck --version
-        env:
-          # renovate: datasource=github-releases depName=koalaman/shellcheck
-          SHELLCHECK_VERSION: v0.11.0
-
-      - name: Install shfmt
-        working-directory: ${{ runner.temp }}
-        run: |
-          curl -fsSL -o shfmt "https://github.com/mvdan/sh/releases/download/${SHFMT_VERSION}/shfmt_${SHFMT_VERSION}_linux_amd64"
-          sudo install -m 0755 shfmt /usr/local/bin/shfmt
-          shfmt --version
-        env:
-          # renovate: datasource=github-releases depName=mvdan/sh
-          SHFMT_VERSION: v3.14.1
+      - name: Install ShellCheck and shfmt
+        uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.22
+        with:
+          tool: shellcheck@${{ env.SHELLCHECK_VERSION }},shfmt@${{ env.SHFMT_VERSION }}
+          fallback: none
 
       - name: Lint code
         run: npm run lint
@@ -62,14 +55,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y binutils-dev build-essential cmake git libcurl4-openssl-dev libdw-dev libiberty-dev libssl-dev python3 zlib1g-dev
-          git clone --depth 1 --branch "${KCOV_VERSION}" https://github.com/SimonKagstrom/kcov.git
+          git clone --depth 1 --branch "v${KCOV_VERSION}" https://github.com/SimonKagstrom/kcov.git
           cmake -S kcov -B kcov/build
           cmake --build kcov/build --parallel "$(nproc)"
           sudo cmake --install kcov/build
           kcov --version
-        env:
-          # renovate: datasource=github-releases depName=SimonKagstrom/kcov
-          KCOV_VERSION: v43
 
       - name: Run unit tests with code coverage
         run: npm run test-coverage
