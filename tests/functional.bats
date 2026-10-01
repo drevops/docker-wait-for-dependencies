@@ -85,3 +85,15 @@ teardown() {
 
   popd >/dev/null || exit 1
 }
+
+@test "compose: shell command still running at the timeout" {
+  pushd "${FIXTURES_DIR}" >/dev/null || exit 1
+
+  step "Run a command that outlasts the timeout."
+  run docker compose -f docker-compose.cmd.yml run --rm --build --no-deps -e TIMEOUT_LENGTH=3 wait-for-dependencies "sleep 60"
+  assert_failure
+  assert_output_contains "Waiting (cmd): sleep 60"
+  assert_output_contains "✗ Timeout after 3s (cmd): sleep 60"
+
+  popd >/dev/null || exit 1
+}
