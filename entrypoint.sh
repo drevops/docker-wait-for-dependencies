@@ -38,8 +38,7 @@ stop_probe_after() {
 
   sleep "${seconds}"
 
-  # A probe can ignore SIGTERM, or trap it and exit 0, so the group gets
-  # SIGKILL.
+  # A probe can ignore SIGTERM or trap it and exit 0, so it gets SIGKILL.
   kill -KILL -- "-${pgid}" 2>/dev/null || true
 }
 
