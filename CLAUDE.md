@@ -16,7 +16,9 @@ The project creates a minimal Alpine Linux Docker image (`drevops/docker-wait-fo
 ### Core Components
 - **`entrypoint.sh`**: Main shell script containing all logic
   - `is_host_port()` function: Validates host:port format with strict regex validation
-  - `wait_probe()` function: Shared poll loop that retries a probe until it succeeds or `TIMEOUT_LENGTH` passes, with a "still waiting" notice at most once every 10s
+  - `stop_probe_after()` function: Watchdog that sends `SIGTERM` to a probe's process group once its time is up, then `SIGKILL` 1s later
+  - `run_probe()` function: Runs 1 attempt in its own process group (`set -m`) with a `stop_probe_after()` watchdog, returns the probe's exit status, and kills whatever the attempt left running; every attempt gets at least 1s
+  - `wait_probe()` function: Shared poll loop that retries a probe through `run_probe()`, capping each attempt at the time left, until it succeeds or `TIMEOUT_LENGTH` passes, with a "still waiting" notice at most once every 10s
   - `wait_tcp()` function: Checks TCP connectivity with `nc -z` through `wait_probe()`
   - `wait_cmd()` function: Runs a shell command health check with `bash -c` through `wait_probe()`
 - **`Dockerfile`**: Minimal Alpine base with bash and curl
@@ -24,7 +26,7 @@ The project creates a minimal Alpine Linux Docker image (`drevops/docker-wait-fo
 
 ### Environment Variables
 - `SLEEP_LENGTH` (default: 2): Seconds between check attempts
-- `TIMEOUT_LENGTH` (default: 300): Maximum wait time before timeout
+- `TIMEOUT_LENGTH` (default: 300): Maximum wait time for each target; an attempt still running when it passes is stopped
 - `SUMMARY_ENABLED` (default: true): Show completion summary
 - `DEBUG` (default: unset): Set to `1` to trace every command with `set -x`
 
@@ -43,7 +45,7 @@ npm run test-coverage   # Run unit tests under kcov, writing .coverage-html (wha
 npm run test-functional # Run functional tests with Docker Compose (tests/functional.bats)
 ```
 
-Unit tests cover `is_host_port()` validation, `wait_tcp()` and `wait_cmd()` with mocked `nc` and `date`, and the entrypoint's exit codes and summary, using data providers where cases repeat. Functional tests use Docker Compose to verify real TCP and command-based waiting scenarios.
+Unit tests cover `is_host_port()` validation, `run_probe()` exit statuses, probes stopped at the timeout along with their child processes, `wait_tcp()` and `wait_cmd()` with mocked `nc` and `date`, and the entrypoint's exit codes and summary, using data providers where cases repeat. Leak checks run the call inside `$(...)` with FD 4 duplicated onto the capture, so the substitution only returns once every probe process has exited. Functional tests use Docker Compose to verify real TCP and command-based waiting scenarios, including a command still running at the timeout.
 
 ### Test Framework
 - **BATS** (Bash Automated Testing System) with `@drevops/bats-helpers` library

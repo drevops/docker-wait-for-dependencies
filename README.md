@@ -126,9 +126,11 @@ The container supports the following environment variables:
 | Variable          | Default | Description                                                |
 |-------------------|---------|------------------------------------------------------------|
 | `SLEEP_LENGTH`    | `2`     | Time (in seconds) to wait between each check attempt       |
-| `TIMEOUT_LENGTH`  | `300`   | Maximum time (in seconds) to wait before giving up         |
+| `TIMEOUT_LENGTH`  | `300`   | Maximum time (in seconds) to wait for each target          |
 | `SUMMARY_ENABLED` | `true`  | Show summary message when all checks complete successfully |
 | `DEBUG`           | unset   | Trace each command as it runs (`set -x`) when set to `1`   |
+
+The container stops a check that's still running when `TIMEOUT_LENGTH` runs out, so a hung `curl` can't keep your stack waiting. The check and every process it started get `SIGTERM`, and `SIGKILL` follows within 1 second for anything still running. If one of your checks legitimately needs more time, raise `TIMEOUT_LENGTH`. The container also stops anything a finished check left running in the background.
 
 ## Development & Maintenance
 
