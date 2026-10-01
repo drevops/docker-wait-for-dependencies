@@ -59,10 +59,11 @@ services:
       TEST_SERVICE2_SLEEP: ${TEST_SERVICE2_SLEEP:-10}
     command: >
       sh -lc "
+        set -eu
         echo \"[service2] Sleeping for $${TEST_SERVICE2_SLEEP}s before listening...\"
         sleep $${TEST_SERVICE2_SLEEP}
         echo \"[service2] Starting netcat listener on port 8002 after sleep for $${TEST_SERVICE2_SLEEP}s\"
-        while true; do nc -l -p 8002 >/dev/null 2>&1; done
+        while true; do nc -l -p 8002 >/dev/null 2>&1 || true; done
       "
     ports:
       - "8002:8002"
@@ -74,8 +75,9 @@ services:
         condition: service_completed_successfully
     command: >
       sh -lc "
+        set -eu
         echo \"[service3] Ready\"
-        while true; do nc -l -p 8003 >/dev/null 2>&1; done
+        while true; do nc -l -p 8003 >/dev/null 2>&1 || true; done
       "
     ports:
       - "8003:8003"
