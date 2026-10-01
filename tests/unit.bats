@@ -273,14 +273,14 @@ load _loader
   mock_nc=$(mock_command nc)
 
   mock_set_status "$mock_nc" 0
-  run wait_tcp myhost 1234
+  run wait_tcp "myhost" 1234
   assert_success
   assert_output_contains "Waiting (tcp): myhost:1234"
   assert_output_contains "✓ Ready (tcp): myhost:1234"
 
   mock_set_status "$mock_nc" 1
   export TIMEOUT_LENGTH=1
-  run wait_tcp myhost 1234
+  run wait_tcp "myhost" 1234
   assert_failure
   assert_output_contains "Waiting (tcp): myhost:1234"
   assert_output_contains "✗ Timeout after 1s (tcp): myhost:1234"
@@ -301,7 +301,7 @@ load _loader
   export TIMEOUT_LENGTH=10
   export SLEEP_LENGTH=0
 
-  run wait_tcp myhost 1234
+  run wait_tcp "myhost" 1234
 
   assert_failure
   assert_output_contains "… still waiting (tcp): myhost:1234 (elapsed 10s, timeout 10s)"
@@ -312,12 +312,12 @@ load _loader
   mock_nc=$(mock_command nc)
 
   mock_set_status "$mock_nc" 0
-  run wait_tcp myhost 1234
+  run wait_tcp "myhost" 1234
   assert_success
 
   mock_set_status "$mock_nc" 1
   export TIMEOUT_LENGTH=1
-  run wait_tcp myhost 1234
+  run wait_tcp "myhost" 1234
   assert_failure
   assert_equal "$status" 1
 }
