@@ -41,7 +41,7 @@
 - **User-friendly output**: Clear progress indicators and status messages
 - **Multi-architecture support**: Available for `linux/amd64` and `linux/arm64`
 
-## Example usage:
+## Example usage
 
 ### TCP Connectivity
 
@@ -86,13 +86,13 @@ Wait for both TCP connectivity and custom health check endpoints:
 ```yaml
 services:
   api:
-    image: php:8.3-cli-alpine
+    image: php:8.4-cli-alpine
     ports:
       - "8080:8080"
     command: php -S 0.0.0.0:8080 -t /app
 
   worker:
-    image: alpine:3.18
+    image: alpine:3.22
     ports:
       - "9000:9000"
     command: nc -l -p 9000
@@ -128,13 +128,15 @@ The container supports the following environment variables:
 | `SLEEP_LENGTH`    | `2`     | Time (in seconds) to wait between each check attempt       |
 | `TIMEOUT_LENGTH`  | `300`   | Maximum time (in seconds) to wait before giving up         |
 | `SUMMARY_ENABLED` | `true`  | Show summary message when all checks complete successfully |
+| `DEBUG`           | unset   | Trace each command as it runs (`set -x`) when set to `1`   |
 
 ## Development & Maintenance
 
 ```bash
 npm run lint # Lint shell scripts and Dockerfile
 npm run lint-fix # Auto-fix formatting issues
-npm run test-unit # Run unit tests for validation logic
+npm run test-unit # Run unit tests
+npm run test-coverage # Run unit tests with code coverage
 npm run test-functional # Run end-to-end tests with Docker
 ```
 

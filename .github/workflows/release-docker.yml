@@ -1,36 +1,22 @@
-name: Release
+name: Release Docker
 
 on:
   push:
     tags:
       - '*'
-    branches:
-      - main
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  release-drafter:
-    permissions:
-      contents: write
-      pull-requests: write
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Draft release notes
-        uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   push-release-to-registry:
-    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4
@@ -57,4 +43,4 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/x86_64,linux/arm64
+          platforms: linux/amd64,linux/arm64
