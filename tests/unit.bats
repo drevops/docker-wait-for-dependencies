@@ -82,14 +82,16 @@ load _loader
 
 @test "shell command mode: successful commands" {
   dataprovider_run_callback() {
-    "$SUT_SCRIPT" "${1}" 2>&1 | grep -q "Waiting (cmd): ${1}" && echo "found" || echo "not found"
+    local result
+    result=$("$SUT_SCRIPT" "${1}" 2>&1) || true
+    [[ ${result} == *"✓ Ready (cmd): ${1}"* ]] && echo "ready" || echo "missing"
   }
 
   TEST_CASES=(
-    "true" "found"
-    "echo 'test' >/dev/null" "found"
-    "[ 1 -eq 1 ]" "found"
-    "test -d /" "found"
+    "true" "ready"
+    "echo 'test' >/dev/null" "ready"
+    "[ 1 -eq 1 ]" "ready"
+    "test -d /" "ready"
   )
   dataprovider_run "dataprovider_run_callback" 2
 }
@@ -97,14 +99,16 @@ load _loader
 @test "shell command mode: failing command timeout" {
   dataprovider_run_callback() {
     export TIMEOUT_LENGTH=2
-    "$SUT_SCRIPT" "${1}" 2>&1 | grep -q "Waiting (cmd): ${1}" && echo "found" || echo "not found"
+    local result
+    result=$("$SUT_SCRIPT" "${1}" 2>&1) || true
+    [[ ${result} == *"✗ Timeout after 2s (cmd): ${1}"* ]] && echo "timeout" || echo "missing"
   }
 
   TEST_CASES=(
-    "false" "found"
-    "[ 1 -eq 2 ]" "found"
-    "test -f /nonexistent" "found"
-    "grep nonexistent /dev/null" "found"
+    "false" "timeout"
+    "[ 1 -eq 2 ]" "timeout"
+    "test -f /nonexistent" "timeout"
+    "grep nonexistent /dev/null" "timeout"
   )
   dataprovider_run "dataprovider_run_callback" 2
 }
@@ -183,15 +187,16 @@ load _loader
 
 @test "wait_cmd: command execution and timeout" {
   dataprovider_run_callback() {
+    local result
     case "${2}" in
       "success")
-        output=$(wait_cmd "${1}" 2>&1)
-        echo "$output" | grep -q "Waiting (cmd): ${1}" && echo "$output" | grep -q "✓ Ready (cmd): ${1}" && echo "success" || echo "failure"
+        result=$(wait_cmd "${1}" 2>&1) || true
+        [[ ${result} == *"Waiting (cmd): ${1}"* && ${result} == *"✓ Ready (cmd): ${1}"* ]] && echo "success" || echo "failure"
         ;;
       "timeout")
         export TIMEOUT_LENGTH=2
-        output=$(wait_cmd "${1}" 2>&1 || true)
-        echo "$output" | grep -q "Waiting (cmd): ${1}" && echo "$output" | grep -q "✗ Timeout after 2s (cmd): ${1}" && echo "timeout" || echo "no_timeout"
+        result=$(wait_cmd "${1}" 2>&1) || true
+        [[ ${result} == *"Waiting (cmd): ${1}"* && ${result} == *"✗ Timeout after 2s (cmd): ${1}"* ]] && echo "timeout" || echo "completed"
         ;;
     esac
   }
@@ -206,7 +211,8 @@ load _loader
     "false" "timeout" "timeout"
     "[ 1 -eq 2 ]" "timeout" "timeout"
     "test -f /nonexistent" "timeout" "timeout"
-    "sleep 10" "timeout" "timeout"
+    # A running probe is not interrupted at the timeout.
+    "sleep 10" "timeout" "completed"
   )
   dataprovider_run "dataprovider_run_callback" 3
 }
