@@ -53,6 +53,12 @@ Unit tests cover `is_host_port()` validation, `run_probe()` exit statuses, probe
 - **Docker integration**: Tests build and run the container with test services
 - **Fixtures**: Separate compose files for TCP vs command testing scenarios
 
+### Continuous Integration
+- The `test` job in `test.yml` runs on a bare `ubuntu-latest` runner. It lints with `luizm/action-sh-checker` (ShellCheck and shfmt) and `hadolint/hadolint-action` instead of `npm run lint`, then runs the same `npm run test-coverage` and `npm run test-functional` scripts listed above
+- The `SHFMT_OPTS` passed to `luizm/action-sh-checker` must match the `shfmt` flags in the `lint` and `lint-fix` scripts in `package.json`, so CI and `npm run lint` check formatting the same way
+- It installs Node.js 24 with `actions/setup-node` and builds kcov from source outside the workspace, since no action installs kcov
+- `KCOV_VERSION` sits in the kcov step's `env` under a `# renovate:` comment, so Renovate bumps it through the `customManagers:githubActionsVersions` preset
+
 ## Container Usage Patterns
 
 The container is designed to be used as a dependency gate in Docker Compose:

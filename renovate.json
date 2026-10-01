@@ -1,6 +1,7 @@
 {
     "extends": [
-        "config:recommended"
+        "config:recommended",
+        "customManagers:githubActionsVersions"
     ],
     "dependencyDashboard": true,
     "automerge": true,
@@ -8,6 +9,7 @@
     "configMigration": true,
     "pinDigests": true,
     "enabledManagers": [
+        "custom.regex",
         "docker-compose",
         "dockerfile",
         "github-actions",
