@@ -53,6 +53,11 @@ Unit tests cover `is_host_port()` validation, `run_probe()` exit statuses, probe
 - **Docker integration**: Tests build and run the container with test services
 - **Fixtures**: Separate compose files for TCP vs command testing scenarios
 
+### Continuous Integration
+- The `test` job in `test.yml` runs on a bare `ubuntu-latest` runner and calls the same `npm run lint`, `npm run test-coverage` and `npm run test-functional` scripts listed above
+- It installs Node.js 24 with `actions/setup-node`, downloads ShellCheck and shfmt from their GitHub releases, and builds kcov from source, all outside the workspace
+- Each tool version is a `*_VERSION` key in its install step's `env` block under a `# renovate:` comment, so Renovate bumps it through the `customManagers:githubActionsVersions` preset
+
 ## Container Usage Patterns
 
 The container is designed to be used as a dependency gate in Docker Compose:
