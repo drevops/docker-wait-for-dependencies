@@ -13,7 +13,7 @@ services:
           $$slow_response_delay = (int) getenv(\"TEST_SERVICE1_SLOW_RESPONSE_DELAY\");
           $$path = $$_SERVER[\"REQUEST_URI\"];
 
-          // Write to Docker logs (stderr) on every request.
+          // Write to Docker logs (stdout) on every request.
           error_log(\"[service1] PHP server request: {$$path}\");
 
           if ($$response_delay > 0) {
