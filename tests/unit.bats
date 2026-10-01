@@ -174,7 +174,6 @@ load _loader
   mock_nc=$(mock_command nc)
   mock_set_status "$mock_nc" 1
   export TIMEOUT_LENGTH=1
-  export SLEEP_LENGTH=1
   run "$SUT_SCRIPT" "myhost:1234" "true"
   assert_failure
   assert_output_contains "Waiting (tcp): myhost:1234"
@@ -275,7 +274,6 @@ load _loader
 
   mock_set_status "$mock_nc" 1
   export TIMEOUT_LENGTH=1
-  export SLEEP_LENGTH=1
   run wait_tcp myhost 1234
   assert_failure
   assert_output_contains "Waiting (tcp): myhost:1234"
@@ -313,7 +311,6 @@ load _loader
 
   mock_set_status "$mock_nc" 1
   export TIMEOUT_LENGTH=1
-  export SLEEP_LENGTH=1
   run wait_tcp myhost 1234
   assert_failure
   assert_equal "$status" 1
