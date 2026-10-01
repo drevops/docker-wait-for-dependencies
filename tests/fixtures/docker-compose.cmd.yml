@@ -3,12 +3,14 @@ services:
     image: php:8.4-cli-alpine
     environment:
       TEST_SERVICE1_SLEEP: ${TEST_SERVICE1_SLEEP:-5}
+      TEST_SERVICE1_RESPONSE_DELAY: ${TEST_SERVICE1_RESPONSE_DELAY:-5}
+      TEST_SERVICE1_SLOW_RESPONSE_DELAY: ${TEST_SERVICE1_SLOW_RESPONSE_DELAY:-10}
     command: >
       sh -lc "
         set -eu
         echo '<?php
-          $$response_delay = getenv(\"TEST_SERVICE1_RESPONSE_DELAY\") ?: 5;
-          $$slow_response_delay = getenv(\"TEST_SERVICE1_SLOW_RESPONSE_DELAY\") ?: 10;
+          $$response_delay = (int) getenv(\"TEST_SERVICE1_RESPONSE_DELAY\");
+          $$slow_response_delay = (int) getenv(\"TEST_SERVICE1_SLOW_RESPONSE_DELAY\");
           $$path = $$_SERVER[\"REQUEST_URI\"];
 
           // Write to Docker logs (stderr) on every request.
