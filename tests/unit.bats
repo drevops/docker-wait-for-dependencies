@@ -348,8 +348,8 @@ load _loader
     local marker="${BATS_TEST_TMPDIR}/attempted-${1}"
     local result
 
-    # The first attempt fails at once and the second one hangs, so the
-    # mocked clock sets the time left for the second attempt.
+    # The first attempt fails at once, so the mocked clock sets the time
+    # left for the second attempt.
     mock_date=$(mock_command date)
     mock_set_output "${mock_date}" 1000 1
     mock_set_output "${mock_date}" 1005 2
@@ -360,19 +360,25 @@ load _loader
     export SLEEP_LENGTH=0
     SECONDS=0
 
-    result=$(wait_cmd "[ -f '${marker}' ] && exec sleep 30; touch '${marker}'; exit 1" 2>&1) || true
+    result=$(wait_cmd "[ -f '${marker}' ] || { touch '${marker}'; exit 1; }; ${2}" 2>&1) || true
 
-    [[ ${result} == *"✗ Timeout after 10s (cmd): "* ]] && ((SECONDS < 5)) && echo "capped" || echo "overran"
+    if [[ ${result} == *"✓ Ready (cmd): "* ]]; then
+      echo "ready"
+    elif [[ ${result} == *"✗ Timeout after 10s (cmd): "* ]] && ((SECONDS < 5)); then
+      echo "stopped"
+    else
+      echo "overran"
+    fi
   }
 
   TEST_CASES=(
-    # 1s left.
-    1009 "capped"
-    # No time left: the attempt still gets 1s.
-    1010 "capped"
-    1012 "capped"
+    # 1s left, so the second attempt is stopped after 1s.
+    1009 "sleep 30" "stopped"
+    # No time left, and the second attempt still gets 1s.
+    1010 "sleep 0.2" "ready"
+    1012 "sleep 0.2" "ready"
   )
-  dataprovider_run "dataprovider_run_callback" 2
+  dataprovider_run "dataprovider_run_callback" 3
 }
 
 @test "wait_tcp: connection check and timeout" {
