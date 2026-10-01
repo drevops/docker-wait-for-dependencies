@@ -32,19 +32,59 @@ is_host_port() {
   return 0
 }
 
+stop_probe_after() {
+  local seconds="${1}"
+  local pgid="${2}"
+
+  sleep "${seconds}"
+  kill -TERM -- "-${pgid}" 2>/dev/null || return 0
+  sleep 1
+  kill -KILL -- "-${pgid}" 2>/dev/null || true
+}
+
+run_probe() {
+  local seconds="${1}"
+  shift
+  local probe_pid watchdog_pid status=0
+
+  if ((seconds < 1)); then
+    seconds=1
+  fi
+
+  # Job control puts each background job in its own process group, so a
+  # signal to the group also reaches the processes the job started.
+  set -m
+  "$@" </dev/null >/dev/null 2>&1 &
+  probe_pid=$!
+  stop_probe_after "${seconds}" "${probe_pid}" &
+  watchdog_pid=$!
+  set +m
+
+  wait "${probe_pid}" 2>/dev/null || status=$?
+
+  # Kill the watchdog and anything the probe left running. A group signal
+  # can miss a child that is being forked, so both groups get a second
+  # SIGKILL once the watchdog has exited.
+  kill -KILL -- "-${watchdog_pid}" "-${probe_pid}" 2>/dev/null || true
+  wait "${watchdog_pid}" 2>/dev/null || true
+  kill -KILL -- "-${watchdog_pid}" "-${probe_pid}" 2>/dev/null || true
+
+  return "${status}"
+}
+
 wait_probe() {
   local kind="${1}"
   local label="${2}"
   shift 2
-  local start_time elapsed_time last_still_waiting=0
+  local start_time elapsed_time=0 last_still_waiting=0
 
   echo "Waiting (${kind}): ${label} …"
   start_time=$(date +%s)
 
-  while ! "$@" >/dev/null 2>&1; do
+  while ! run_probe "$((TIMEOUT_LENGTH - elapsed_time))" "$@"; do
     elapsed_time=$(($(date +%s) - start_time))
 
-    if ((elapsed_time > TIMEOUT_LENGTH)); then
+    if ((elapsed_time >= TIMEOUT_LENGTH)); then
       echo "✗ Timeout after ${TIMEOUT_LENGTH}s (${kind}): ${label}"
       return 1
     fi
@@ -55,6 +95,7 @@ wait_probe() {
     fi
 
     sleep "${SLEEP_LENGTH}"
+    elapsed_time=$(($(date +%s) - start_time))
   done
 
   echo "✓ Ready (${kind}): ${label}"
