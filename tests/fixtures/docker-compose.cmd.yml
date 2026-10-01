@@ -69,7 +69,7 @@ services:
       - "8002:8002"
 
   service3:
-    image: alpine:3.18
+    image: alpine:3.22
     depends_on:
       wait-for-dependencies:
         condition: service_completed_successfully

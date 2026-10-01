@@ -92,7 +92,7 @@ services:
     command: php -S 0.0.0.0:8080 -t /app
 
   worker:
-    image: alpine:3.18
+    image: alpine:3.22
     ports:
       - "9000:9000"
     command: nc -l -p 9000
