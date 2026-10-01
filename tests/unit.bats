@@ -185,6 +185,58 @@ load _loader
   assert_output_not_contains "Waiting (cmd): true"
 }
 
+@test "run_probe: returns the command exit status" {
+  dataprovider_run_callback() {
+    local status=0
+    run_probe "${1}" bash -c "${2}" || status=$?
+    echo "status ${status}"
+  }
+
+  TEST_CASES=(
+    30 "exit 0" "status 0"
+    30 "exit 3" "status 3"
+    # Stopped with SIGKILL, even when the command traps SIGTERM.
+    1 "sleep 30" "status 137"
+    1 "trap 'exit 0' TERM; sleep 30" "status 137"
+  )
+  dataprovider_run "dataprovider_run_callback" 3
+}
+
+@test "wait_probe: stops a probe still running at the timeout" {
+  dataprovider_run_callback() {
+    local kind="${1}"
+    local script="${2}"
+    local result
+
+    export TIMEOUT_LENGTH=1
+    SECONDS=0
+
+    # Probe processes inherit FD 4, so the capture stays open until all
+    # of them exit.
+    if [[ ${kind} == "tcp" ]]; then
+      mock_nc=$(mock_command nc)
+      mock_set_side_effect "${mock_nc}" "${script}"
+      result=$(wait_tcp "myhost" 1234 2>&1 4>&1) || true
+    else
+      result=$(wait_cmd "${script}" 2>&1 4>&1) || true
+    fi
+
+    [[ ${result} == *"✗ Timeout after 1s (${kind}): "* ]] && ((SECONDS < 5)) && echo "stopped" || echo "running"
+  }
+
+  TEST_CASES=(
+    "cmd" "sleep 30" "stopped"
+    "cmd" "sleep 30 | cat" "stopped"
+    "cmd" "sleep 30 & wait" "stopped"
+    "cmd" "trap '' TERM; sleep 30" "stopped"
+    "cmd" "trap 'exit 0' TERM; sleep 30" "stopped"
+    "cmd" "sleep 30 & false" "stopped"
+    "tcp" "sleep 30" "stopped"
+    "tcp" "trap 'exit 0' TERM; sleep 30" "stopped"
+  )
+  dataprovider_run "dataprovider_run_callback" 3
+}
+
 @test "wait_cmd: command execution and timeout" {
   dataprovider_run_callback() {
     local result
@@ -211,29 +263,30 @@ load _loader
     "false" "timeout" "timeout"
     "[ 1 -eq 2 ]" "timeout" "timeout"
     "test -f /nonexistent" "timeout" "timeout"
-    # A running probe is not interrupted at the timeout.
-    "sleep 10" "timeout" "completed"
+    # Still running when the timeout passes.
+    "sleep 10" "timeout" "timeout"
   )
   dataprovider_run "dataprovider_run_callback" 3
 }
 
 @test "wait_cmd: still waiting names the command" {
   # Mock 'date' so elapsed time reaches the 10s progress mark and then
-  # exceeds the timeout. The test then runs without real sleeping or
-  # wall-clock timing, so it is instant and deterministic.
+  # the timeout. The test then runs without real sleeping or wall-clock
+  # timing, so it is instant and deterministic.
   mock_date=$(mock_command date)
   mock_set_output "${mock_date}" 1000 1
   mock_set_output "${mock_date}" 1010 2
-  mock_set_output "${mock_date}" 1011 3
+  mock_set_output "${mock_date}" 1010 3
+  mock_set_output "${mock_date}" 1011 4
 
-  export TIMEOUT_LENGTH=10
+  export TIMEOUT_LENGTH=11
   export SLEEP_LENGTH=0
 
   run wait_cmd "false"
 
   assert_failure
-  assert_output_contains "… still waiting (cmd): false (elapsed 10s, timeout 10s)"
-  assert_output_contains "✗ Timeout after 10s (cmd): false"
+  assert_output_contains "… still waiting (cmd): false (elapsed 10s, timeout 11s)"
+  assert_output_contains "✗ Timeout after 11s (cmd): false"
 }
 
 @test "wait_cmd: still waiting prints off the 10s mark" {
@@ -242,16 +295,17 @@ load _loader
   mock_date=$(mock_command date)
   mock_set_output "${mock_date}" 1000 1
   mock_set_output "${mock_date}" 1012 2
-  mock_set_output "${mock_date}" 1013 3
+  mock_set_output "${mock_date}" 1012 3
+  mock_set_output "${mock_date}" 1013 4
 
-  export TIMEOUT_LENGTH=12
+  export TIMEOUT_LENGTH=13
   export SLEEP_LENGTH=0
 
   run wait_cmd "false"
 
   assert_failure
-  assert_output_contains "… still waiting (cmd): false (elapsed 12s, timeout 12s)"
-  assert_output_contains "✗ Timeout after 12s (cmd): false"
+  assert_output_contains "… still waiting (cmd): false (elapsed 12s, timeout 13s)"
+  assert_output_contains "✗ Timeout after 13s (cmd): false"
 }
 
 @test "wait_cmd: return codes and basic functionality" {
@@ -267,6 +321,65 @@ load _loader
   assert_success
   assert_output_contains "Waiting (cmd): true"
   assert_output_contains "✓ Ready (cmd): true"
+}
+
+@test "wait_cmd: returns as soon as the command succeeds" {
+  dataprovider_run_callback() {
+    local result
+
+    export TIMEOUT_LENGTH=30
+    SECONDS=0
+
+    # Probe processes inherit FD 4, so the capture stays open until all
+    # of them exit.
+    result=$(wait_cmd "${1}" 2>&1 4>&1) || true
+
+    [[ ${result} == *"✓ Ready (cmd): ${1}"* ]] && ((SECONDS < 5)) && echo "ready" || echo "slow"
+  }
+
+  TEST_CASES=(
+    "true" "ready"
+    "sleep 30 &" "ready"
+  )
+  dataprovider_run "dataprovider_run_callback" 2
+}
+
+@test "wait_cmd: limits each attempt to the time left" {
+  dataprovider_run_callback() {
+    local marker="${BATS_TEST_TMPDIR}/attempted-${1}"
+    local result
+
+    # The first attempt fails at once, so the mocked clock sets the time
+    # left for the second attempt.
+    mock_date=$(mock_command date)
+    mock_set_output "${mock_date}" 1000 1
+    mock_set_output "${mock_date}" 1005 2
+    mock_set_output "${mock_date}" "${1}" 3
+    mock_set_output "${mock_date}" 1013 4
+
+    export TIMEOUT_LENGTH=10
+    export SLEEP_LENGTH=0
+    SECONDS=0
+
+    result=$(wait_cmd "[ -f '${marker}' ] || { touch '${marker}'; exit 1; }; ${2}" 2>&1) || true
+
+    if [[ ${result} == *"✓ Ready (cmd): "* ]]; then
+      echo "ready"
+    elif [[ ${result} == *"✗ Timeout after 10s (cmd): "* ]] && ((SECONDS < 5)); then
+      echo "stopped"
+    else
+      echo "overran"
+    fi
+  }
+
+  TEST_CASES=(
+    # 1s left, so the second attempt is stopped after 1s.
+    1009 "sleep 30" "stopped"
+    # No time left, and the second attempt still gets 1s.
+    1010 "sleep 0.2" "ready"
+    1012 "sleep 0.2" "ready"
+  )
+  dataprovider_run "dataprovider_run_callback" 3
 }
 
 @test "wait_tcp: connection check and timeout" {
@@ -291,21 +404,22 @@ load _loader
   mock_set_status "${mock_nc}" 1
 
   # Mock 'date' so elapsed time reaches the 10s progress mark and then
-  # exceeds the timeout. The test then runs without real sleeping or
-  # wall-clock timing, so it is instant and deterministic.
+  # the timeout. The test then runs without real sleeping or wall-clock
+  # timing, so it is instant and deterministic.
   mock_date=$(mock_command date)
   mock_set_output "${mock_date}" 1000 1
   mock_set_output "${mock_date}" 1010 2
-  mock_set_output "${mock_date}" 1011 3
+  mock_set_output "${mock_date}" 1010 3
+  mock_set_output "${mock_date}" 1011 4
 
-  export TIMEOUT_LENGTH=10
+  export TIMEOUT_LENGTH=11
   export SLEEP_LENGTH=0
 
   run wait_tcp "myhost" 1234
 
   assert_failure
-  assert_output_contains "… still waiting (tcp): myhost:1234 (elapsed 10s, timeout 10s)"
-  assert_output_contains "✗ Timeout after 10s (tcp): myhost:1234"
+  assert_output_contains "… still waiting (tcp): myhost:1234 (elapsed 10s, timeout 11s)"
+  assert_output_contains "✗ Timeout after 11s (tcp): myhost:1234"
 }
 
 @test "wait_tcp: return codes and basic functionality" {
