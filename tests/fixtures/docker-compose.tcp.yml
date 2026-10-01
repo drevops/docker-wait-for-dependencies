@@ -1,6 +1,6 @@
 services:
   service1:
-    image: alpine:3.22
+    image: alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
     environment:
       TEST_SERVICE1_SLEEP: ${TEST_SERVICE1_SLEEP:-5}
     command: >
@@ -15,7 +15,7 @@ services:
       - "8001:8001"
 
   service2:
-    image: alpine:3.22
+    image: alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
     environment:
       TEST_SERVICE2_SLEEP: ${TEST_SERVICE2_SLEEP:-10}
     command: >
@@ -30,7 +30,7 @@ services:
       - "8002:8002"
 
   service3:
-    image: alpine:3.22
+    image: alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
     depends_on:
       wait-for-dependencies:
         condition: service_completed_successfully
