@@ -10,7 +10,7 @@ teardown() {
   container_cleanup
 }
 
-@test "tcp" {
+@test "compose: tcp targets" {
   pushd "${FIXTURES_DIR}" >/dev/null || exit 1
 
   step "Start the stack."
@@ -45,7 +45,7 @@ teardown() {
   popd >/dev/null || exit 1
 }
 
-@test "cmd" {
+@test "compose: tcp and shell command targets" {
   pushd "${FIXTURES_DIR}" >/dev/null || exit 1
 
   step "Start the stack."

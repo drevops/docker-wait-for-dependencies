@@ -5,7 +5,7 @@ export SUT_SCRIPT="${BATS_TEST_DIRNAME}/../entrypoint.sh"
 
 load _loader
 
-@test "is_host_port" {
+@test "is_host_port: valid and invalid targets" {
   dataprovider_run_callback() {
     is_host_port "${1}" && echo "success" || echo "failure"
   }
@@ -73,14 +73,14 @@ load _loader
   dataprovider_run "dataprovider_run_callback" 2
 }
 
-@test "script exits with usage when no arguments provided" {
+@test "entrypoint: exits with usage when no arguments are provided" {
   run "$SUT_SCRIPT"
   assert_failure
   assert_output_contains "Usage: entrypoint.sh"
   assert_output_contains "target: 'host:port' (tcp) or arbitrary shell command"
 }
 
-@test "shell command mode: successful commands" {
+@test "entrypoint: successful shell commands" {
   dataprovider_run_callback() {
     local result
     result=$("$SUT_SCRIPT" "${1}" 2>&1) || true
@@ -96,7 +96,7 @@ load _loader
   dataprovider_run "dataprovider_run_callback" 2
 }
 
-@test "shell command mode: failing command timeout" {
+@test "entrypoint: failing shell commands time out" {
   dataprovider_run_callback() {
     export TIMEOUT_LENGTH=2
     local result
@@ -113,28 +113,28 @@ load _loader
   dataprovider_run "dataprovider_run_callback" 2
 }
 
-@test "shell command mode: complex command with pipes" {
+@test "entrypoint: shell command with pipes" {
   run "$SUT_SCRIPT" "echo 'test' | grep -q 'test'"
   assert_success
   assert_output_contains "Waiting (cmd): echo 'test' | grep -q 'test'"
   assert_output_contains "✓ Ready (cmd): echo 'test' | grep -q 'test'"
 }
 
-@test "summary can be disabled" {
+@test "entrypoint: summary can be disabled" {
   export SUMMARY_ENABLED=false
   run "$SUT_SCRIPT" "true"
   assert_success
   assert_output_not_contains "☑ All services have started."
 }
 
-@test "summary can be enabled explicitly" {
+@test "entrypoint: summary can be enabled explicitly" {
   export SUMMARY_ENABLED=true
   run "$SUT_SCRIPT" "true"
   assert_success
   assert_output_contains "☑ All services have started."
 }
 
-@test "multiple successful shell commands" {
+@test "entrypoint: multiple successful shell commands" {
   run "$SUT_SCRIPT" "true" "echo 'test' >/dev/null"
   assert_success
   assert_output_contains "Waiting (cmd): true"
@@ -144,7 +144,7 @@ load _loader
   assert_output_contains "☑ All services have started."
 }
 
-@test "exit on first failure - shell command" {
+@test "entrypoint: exits on the first failing shell command" {
   export TIMEOUT_LENGTH=2
   run "$SUT_SCRIPT" "false" "true"
   assert_failure
@@ -153,7 +153,7 @@ load _loader
   assert_output_not_contains "Waiting (cmd): true"
 }
 
-@test "tcp target ready" {
+@test "entrypoint: tcp target ready" {
   mock_nc=$(mock_command nc)
   mock_set_status "$mock_nc" 0
   run "$SUT_SCRIPT" "myhost:1234"
@@ -163,7 +163,7 @@ load _loader
   assert_output_contains "☑ All services have started."
 }
 
-@test "mixed tcp and shell command targets" {
+@test "entrypoint: mixed tcp and shell command targets" {
   mock_nc=$(mock_command nc)
   mock_set_status "$mock_nc" 0
   run "$SUT_SCRIPT" "myhost:1234" "true"
@@ -174,7 +174,7 @@ load _loader
   assert_output_contains "☑ All services have started."
 }
 
-@test "exit on first failure - tcp" {
+@test "entrypoint: exits on the first failing tcp target" {
   mock_nc=$(mock_command nc)
   mock_set_status "$mock_nc" 1
   export TIMEOUT_LENGTH=1
