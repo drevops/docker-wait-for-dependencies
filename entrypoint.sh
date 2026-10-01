@@ -32,61 +32,47 @@ is_host_port() {
   return 0
 }
 
-wait_tcp() {
-  local host="$1"
-  local port="$2"
+wait_probe() {
+  local kind="$1"
+  local label="$2"
+  shift 2
   local start_time elapsed_time last_still_waiting=0
 
-  echo "Waiting (tcp): ${host}:${port} …"
+  echo "Waiting (${kind}): ${label} …"
   start_time=$(date +%s)
 
-  while ! nc -z "$host" "$port" >/dev/null 2>&1; do
+  while ! "$@" >/dev/null 2>&1; do
     elapsed_time=$(($(date +%s) - start_time))
 
     if ((elapsed_time > TIMEOUT_LENGTH)); then
-      echo "✗ Timeout after ${TIMEOUT_LENGTH}s (tcp): ${host}:${port}"
+      echo "✗ Timeout after ${TIMEOUT_LENGTH}s (${kind}): ${label}"
       return 1
     fi
 
     # Print "still waiting" every ~10s, but not on first iteration
     if ((elapsed_time > 0 && elapsed_time % 10 == 0 && elapsed_time != last_still_waiting)); then
-      echo "… still waiting (tcp): ${host}:${port} (elapsed ${elapsed_time}s, timeout ${TIMEOUT_LENGTH}s)"
+      echo "… still waiting (${kind}): ${label} (elapsed ${elapsed_time}s, timeout ${TIMEOUT_LENGTH}s)"
       last_still_waiting=$elapsed_time
     fi
 
     sleep "$SLEEP_LENGTH"
   done
 
-  echo "✓ Ready (tcp): ${host}:${port}"
+  echo "✓ Ready (${kind}): ${label}"
   return 0
+}
+
+wait_tcp() {
+  local host="$1"
+  local port="$2"
+
+  wait_probe tcp "${host}:${port}" nc -z "$host" "$port"
 }
 
 wait_cmd() {
   local cmd="$1"
-  local start_time elapsed_time last_still_waiting=0
 
-  echo "Waiting (cmd): $cmd …"
-  start_time=$(date +%s)
-
-  while ! bash -c "$cmd" >/dev/null 2>&1; do
-    elapsed_time=$(($(date +%s) - start_time))
-
-    if ((elapsed_time > TIMEOUT_LENGTH)); then
-      echo "✗ Timeout after ${TIMEOUT_LENGTH}s (cmd): $cmd"
-      return 1
-    fi
-
-    # Print "still waiting" every ~10s, but not on first iteration
-    if ((elapsed_time > 0 && elapsed_time % 10 == 0 && elapsed_time != last_still_waiting)); then
-      echo "… still waiting (cmd): ${cmd} (elapsed ${elapsed_time}s, timeout ${TIMEOUT_LENGTH}s)"
-      last_still_waiting=$elapsed_time
-    fi
-
-    sleep "$SLEEP_LENGTH"
-  done
-
-  echo "✓ Ready (cmd): $cmd"
-  return 0
+  wait_probe cmd "$cmd" bash -c "$cmd"
 }
 
 main() {
