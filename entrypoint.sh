@@ -7,9 +7,9 @@ TIMEOUT_LENGTH="${TIMEOUT_LENGTH:-300}"
 SUMMARY_ENABLED="${SUMMARY_ENABLED:-true}"
 
 is_host_port() {
-  local target="$1"
+  local target="${1}"
 
-  if [[ $target == *"://"* ]] || [[ $target == *" "* ]] || [[ $target == *"/"* ]]; then
+  if [[ ${target} == *"://"* ]] || [[ ${target} == *" "* ]] || [[ ${target} == *"/"* ]]; then
     return 1
   fi
 
@@ -21,11 +21,11 @@ is_host_port() {
   local host="${target%:*}"
   local port="${target#*:}"
 
-  if [[ ! $host =~ ^[A-Za-z0-9._-]+$ ]] || [[ -z $host ]]; then
+  if [[ ! ${host} =~ ^[A-Za-z0-9._-]+$ ]] || [[ -z ${host} ]]; then
     return 1
   fi
 
-  if [[ ! $port =~ ^[0-9]{1,5}$ ]] || ((port < 1 || port > 65535)); then
+  if [[ ! ${port} =~ ^[0-9]{1,5}$ ]] || ((port < 1 || port > 65535)); then
     return 1
   fi
 
@@ -33,8 +33,8 @@ is_host_port() {
 }
 
 wait_probe() {
-  local kind="$1"
-  local label="$2"
+  local kind="${1}"
+  local label="${2}"
   shift 2
   local start_time elapsed_time last_still_waiting=0
 
@@ -51,10 +51,10 @@ wait_probe() {
 
     if ((elapsed_time - last_still_waiting >= 10)); then
       echo "… still waiting (${kind}): ${label} (elapsed ${elapsed_time}s, timeout ${TIMEOUT_LENGTH}s)"
-      last_still_waiting=$elapsed_time
+      last_still_waiting=${elapsed_time}
     fi
 
-    sleep "$SLEEP_LENGTH"
+    sleep "${SLEEP_LENGTH}"
   done
 
   echo "✓ Ready (${kind}): ${label}"
@@ -62,16 +62,16 @@ wait_probe() {
 }
 
 wait_tcp() {
-  local host="$1"
-  local port="$2"
+  local host="${1}"
+  local port="${2}"
 
-  wait_probe tcp "${host}:${port}" nc -z "$host" "$port"
+  wait_probe tcp "${host}:${port}" nc -z "${host}" "${port}"
 }
 
 wait_cmd() {
-  local cmd="$1"
+  local cmd="${1}"
 
-  wait_probe cmd "$cmd" bash -c "$cmd"
+  wait_probe cmd "${cmd}" bash -c "${cmd}"
 }
 
 main() {
@@ -83,14 +83,14 @@ main() {
 
   local target
   for target in "$@"; do
-    if is_host_port "$target"; then
+    if is_host_port "${target}"; then
       local host="${target%:*}"
       local port="${target#*:}"
-      if ! wait_tcp "$host" "$port"; then
+      if ! wait_tcp "${host}" "${port}"; then
         exit 1
       fi
     else
-      if ! wait_cmd "$target"; then
+      if ! wait_cmd "${target}"; then
         exit 1
       fi
     fi

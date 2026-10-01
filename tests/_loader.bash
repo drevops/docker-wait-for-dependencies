@@ -52,6 +52,6 @@ wait_for_cmd() {
     fi
 
     echo -n "." >&3
-    sleep "$sleep_time"
+    sleep "${sleep_time}"
   done
 }

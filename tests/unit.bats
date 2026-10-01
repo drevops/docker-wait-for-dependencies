@@ -74,7 +74,7 @@ load _loader
 }
 
 @test "entrypoint: exits with usage when no arguments are provided" {
-  run "$SUT_SCRIPT"
+  run "${SUT_SCRIPT}"
   assert_failure
   assert_output_contains "Usage: entrypoint.sh"
   assert_output_contains "target: 'host:port' (tcp) or arbitrary shell command"
@@ -83,7 +83,7 @@ load _loader
 @test "entrypoint: successful shell commands" {
   dataprovider_run_callback() {
     local result
-    result=$("$SUT_SCRIPT" "${1}" 2>&1) || true
+    result=$("${SUT_SCRIPT}" "${1}" 2>&1) || true
     [[ ${result} == *"✓ Ready (cmd): ${1}"* ]] && echo "ready" || echo "missing"
   }
 
@@ -100,7 +100,7 @@ load _loader
   dataprovider_run_callback() {
     export TIMEOUT_LENGTH=2
     local result
-    result=$("$SUT_SCRIPT" "${1}" 2>&1) || true
+    result=$("${SUT_SCRIPT}" "${1}" 2>&1) || true
     [[ ${result} == *"✗ Timeout after 2s (cmd): ${1}"* ]] && echo "timeout" || echo "missing"
   }
 
@@ -114,7 +114,7 @@ load _loader
 }
 
 @test "entrypoint: shell command with pipes" {
-  run "$SUT_SCRIPT" "echo 'test' | grep -q 'test'"
+  run "${SUT_SCRIPT}" "echo 'test' | grep -q 'test'"
   assert_success
   assert_output_contains "Waiting (cmd): echo 'test' | grep -q 'test'"
   assert_output_contains "✓ Ready (cmd): echo 'test' | grep -q 'test'"
@@ -122,20 +122,20 @@ load _loader
 
 @test "entrypoint: summary can be disabled" {
   export SUMMARY_ENABLED=false
-  run "$SUT_SCRIPT" "true"
+  run "${SUT_SCRIPT}" "true"
   assert_success
   assert_output_not_contains "☑ All services have started."
 }
 
 @test "entrypoint: summary can be enabled explicitly" {
   export SUMMARY_ENABLED=true
-  run "$SUT_SCRIPT" "true"
+  run "${SUT_SCRIPT}" "true"
   assert_success
   assert_output_contains "☑ All services have started."
 }
 
 @test "entrypoint: multiple successful shell commands" {
-  run "$SUT_SCRIPT" "true" "echo 'test' >/dev/null"
+  run "${SUT_SCRIPT}" "true" "echo 'test' >/dev/null"
   assert_success
   assert_output_contains "Waiting (cmd): true"
   assert_output_contains "✓ Ready (cmd): true"
@@ -146,7 +146,7 @@ load _loader
 
 @test "entrypoint: exits on the first failing shell command" {
   export TIMEOUT_LENGTH=2
-  run "$SUT_SCRIPT" "false" "true"
+  run "${SUT_SCRIPT}" "false" "true"
   assert_failure
   assert_output_contains "Waiting (cmd): false"
   assert_output_contains "✗ Timeout after 2s (cmd): false"
@@ -155,8 +155,8 @@ load _loader
 
 @test "entrypoint: tcp target ready" {
   mock_nc=$(mock_command nc)
-  mock_set_status "$mock_nc" 0
-  run "$SUT_SCRIPT" "myhost:1234"
+  mock_set_status "${mock_nc}" 0
+  run "${SUT_SCRIPT}" "myhost:1234"
   assert_success
   assert_output_contains "Waiting (tcp): myhost:1234"
   assert_output_contains "✓ Ready (tcp): myhost:1234"
@@ -165,8 +165,8 @@ load _loader
 
 @test "entrypoint: mixed tcp and shell command targets" {
   mock_nc=$(mock_command nc)
-  mock_set_status "$mock_nc" 0
-  run "$SUT_SCRIPT" "myhost:1234" "true"
+  mock_set_status "${mock_nc}" 0
+  run "${SUT_SCRIPT}" "myhost:1234" "true"
   assert_success
   assert_output_contains "✓ Ready (tcp): myhost:1234"
   assert_output_contains "Waiting (cmd): true"
@@ -176,9 +176,9 @@ load _loader
 
 @test "entrypoint: exits on the first failing tcp target" {
   mock_nc=$(mock_command nc)
-  mock_set_status "$mock_nc" 1
+  mock_set_status "${mock_nc}" 1
   export TIMEOUT_LENGTH=1
-  run "$SUT_SCRIPT" "myhost:1234" "true"
+  run "${SUT_SCRIPT}" "myhost:1234" "true"
   assert_failure
   assert_output_contains "Waiting (tcp): myhost:1234"
   assert_output_contains "✗ Timeout after 1s (tcp): myhost:1234"
@@ -222,9 +222,9 @@ load _loader
   # exceeds the timeout. The test then runs without real sleeping or
   # wall-clock timing, so it is instant and deterministic.
   mock_date=$(mock_command date)
-  mock_set_output "$mock_date" 1000 1
-  mock_set_output "$mock_date" 1010 2
-  mock_set_output "$mock_date" 1011 3
+  mock_set_output "${mock_date}" 1000 1
+  mock_set_output "${mock_date}" 1010 2
+  mock_set_output "${mock_date}" 1011 3
 
   export TIMEOUT_LENGTH=10
   export SLEEP_LENGTH=0
@@ -240,9 +240,9 @@ load _loader
   # Mock 'date' so the first check sees 12s elapsed, which is not a
   # multiple of 10.
   mock_date=$(mock_command date)
-  mock_set_output "$mock_date" 1000 1
-  mock_set_output "$mock_date" 1012 2
-  mock_set_output "$mock_date" 1013 3
+  mock_set_output "${mock_date}" 1000 1
+  mock_set_output "${mock_date}" 1012 2
+  mock_set_output "${mock_date}" 1013 3
 
   export TIMEOUT_LENGTH=12
   export SLEEP_LENGTH=0
@@ -261,7 +261,7 @@ load _loader
   export TIMEOUT_LENGTH=1
   run wait_cmd "false"
   assert_failure
-  assert_equal "$status" 1
+  assert_equal "${status}" 1
 
   run wait_cmd "true"
   assert_success
@@ -272,13 +272,13 @@ load _loader
 @test "wait_tcp: connection check and timeout" {
   mock_nc=$(mock_command nc)
 
-  mock_set_status "$mock_nc" 0
+  mock_set_status "${mock_nc}" 0
   run wait_tcp "myhost" 1234
   assert_success
   assert_output_contains "Waiting (tcp): myhost:1234"
   assert_output_contains "✓ Ready (tcp): myhost:1234"
 
-  mock_set_status "$mock_nc" 1
+  mock_set_status "${mock_nc}" 1
   export TIMEOUT_LENGTH=1
   run wait_tcp "myhost" 1234
   assert_failure
@@ -288,15 +288,15 @@ load _loader
 
 @test "wait_tcp: still waiting names the service" {
   mock_nc=$(mock_command nc)
-  mock_set_status "$mock_nc" 1
+  mock_set_status "${mock_nc}" 1
 
   # Mock 'date' so elapsed time reaches the 10s progress mark and then
   # exceeds the timeout. The test then runs without real sleeping or
   # wall-clock timing, so it is instant and deterministic.
   mock_date=$(mock_command date)
-  mock_set_output "$mock_date" 1000 1
-  mock_set_output "$mock_date" 1010 2
-  mock_set_output "$mock_date" 1011 3
+  mock_set_output "${mock_date}" 1000 1
+  mock_set_output "${mock_date}" 1010 2
+  mock_set_output "${mock_date}" 1011 3
 
   export TIMEOUT_LENGTH=10
   export SLEEP_LENGTH=0
@@ -311,13 +311,13 @@ load _loader
 @test "wait_tcp: return codes and basic functionality" {
   mock_nc=$(mock_command nc)
 
-  mock_set_status "$mock_nc" 0
+  mock_set_status "${mock_nc}" 0
   run wait_tcp "myhost" 1234
   assert_success
 
-  mock_set_status "$mock_nc" 1
+  mock_set_status "${mock_nc}" 1
   export TIMEOUT_LENGTH=1
   run wait_tcp "myhost" 1234
   assert_failure
-  assert_equal "$status" 1
+  assert_equal "${status}" 1
 }
