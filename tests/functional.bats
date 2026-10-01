@@ -2,6 +2,14 @@
 
 load _loader
 
+setup_file() {
+  container_cleanup
+}
+
+teardown() {
+  container_cleanup
+}
+
 @test "tcp" {
   pushd "${FIXTURES_DIR}" >/dev/null || exit 1
 

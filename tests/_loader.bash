@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1090
 
+export FIXTURES_DIR="${BATS_TEST_DIRNAME}/fixtures"
+
 setup() {
   export BATS_LIB_PATH="${BATS_TEST_DIRNAME}/../node_modules"
-
-  export FIXTURES_DIR="${BATS_TEST_DIRNAME}/fixtures"
 
   ASSERT_DIR_EXCLUDE=("vortex" ".data")
   export ASSERT_DIR_EXCLUDE
@@ -17,17 +17,11 @@ setup() {
     export TIMEOUT_LENGTH=1
     source "${SUT_SCRIPT}"
   fi
-
-  container_cleanup
-}
-
-teardown() {
-  container_cleanup
 }
 
 container_cleanup() {
-  docker compose -f docker-compose.tcp.yml down -v --remove-orphans >/dev/null 2>&1 || true
-  docker compose -f docker-compose.cmd.yml down -v --remove-orphans >/dev/null 2>&1 || true
+  docker compose -f "${FIXTURES_DIR}/docker-compose.tcp.yml" down -v --remove-orphans >/dev/null 2>&1 || true
+  docker compose -f "${FIXTURES_DIR}/docker-compose.cmd.yml" down -v --remove-orphans >/dev/null 2>&1 || true
 }
 
 step() {
