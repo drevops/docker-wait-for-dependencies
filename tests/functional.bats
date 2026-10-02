@@ -97,3 +97,16 @@ teardown() {
 
   popd >/dev/null || exit 1
 }
+
+@test "compose: tcp target with a leading zero in the port" {
+  pushd "${FIXTURES_DIR}" >/dev/null || exit 1
+
+  step "Wait for a port written with a leading zero."
+  run docker compose -f docker-compose.tcp.yml run --rm --build wait-for-dependencies service1:08001
+  assert_success
+  assert_output_contains "Waiting (tcp): service1:08001"
+  assert_output_contains "✓ Ready (tcp): service1:08001"
+  assert_output_not_contains "value too great for base"
+
+  popd >/dev/null || exit 1
+}
