@@ -7,12 +7,12 @@
 
 <div align="center">
 
-[![GitHub Issues](https://img.shields.io/github/issues/DrevOps/docker-wait-for-dependencies.svg)](https://github.com/DrevOps/docker-wait-for-dependencies/issues)
-[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/DrevOps/docker-wait-for-dependencies.svg)](https://github.com/DrevOps/docker-wait-for-dependencies/pulls)
+[![GitHub Issues](https://img.shields.io/github/issues/drevops/docker-wait-for-dependencies.svg)](https://github.com/drevops/docker-wait-for-dependencies/issues)
+[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/drevops/docker-wait-for-dependencies.svg)](https://github.com/drevops/docker-wait-for-dependencies/pulls)
 [![Test](https://github.com/drevops/docker-wait-for-dependencies/actions/workflows/test.yml/badge.svg)](https://github.com/drevops/docker-wait-for-dependencies/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/drevops/docker-wait-for-dependencies/graph/badge.svg?token=BZK6852630)](https://codecov.io/gh/drevops/docker-wait-for-dependencies)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/DrevOps/docker-wait-for-dependencies)
-![LICENSE](https://img.shields.io/github/license/DrevOps/docker-wait-for-dependencies)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/drevops/docker-wait-for-dependencies)
+![LICENSE](https://img.shields.io/github/license/drevops/docker-wait-for-dependencies)
 ![Renovate](https://img.shields.io/badge/renovate-enabled-green?logo=renovatebot)
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/drevops/docker-wait-for-dependencies?logo=docker)](https://hub.docker.com/r/drevops/docker-wait-for-dependencies)
@@ -25,7 +25,7 @@
 ---
 
 <p align="center">
-  Container to wait for container healthchecks before proceeding with the stack start
+  Container to wait for services to be ready before proceeding with the stack start
   <br>
   Available for <code>linux/amd64</code> and <code>linux/arm64</code> architectures.
   <br>
@@ -33,17 +33,37 @@
 
 ## Features
 
-- **TCP connectivity**: Wait for services to be accessible via TCP (using
-  `host:port` format)
-- **Shell command**: Execute arbitrary shell commands and wait for successful
-  completion
+- **TCP connectivity**: Wait for services to be accessible via TCP (using `host:port` format)
+- **Shell command**: Execute arbitrary shell commands and wait for successful completion
 - **Configurable timeouts**: Customizable sleep intervals and timeout periods
+- **Hung check protection**: A check that's still running at the timeout is stopped, so it can't keep the stack waiting
 - **User-friendly output**: Clear progress indicators and status messages
 - **Multi-architecture support**: Available for `linux/amd64` and `linux/arm64`
 
-## Example usage
+## Installation
 
-### TCP Connectivity
+The image is published on [Docker Hub](https://hub.docker.com/r/drevops/docker-wait-for-dependencies), so there's nothing to install: reference it from a Compose file, as shown in [Usage](#usage).
+
+| Tag          | Points to                                         |
+|--------------|---------------------------------------------------|
+| `YY.M.patch` | A specific release, for example `26.10.0`         |
+| `latest`     | The most recent release                           |
+| `canary`     | The latest commit on `main` that passed the tests |
+
+Releases follow [CalVer](https://calver.org/): `YY` is the last 2 digits of the year, `M` is the month without a leading zero, and `patch` is the patch number within the month, starting at `0`. For example, `25.4.2` is the third patch in April 2025.
+
+## Usage
+
+Pass 1 or more targets as the container's command. The container checks them in order and only moves on to the next target once the current one is ready:
+
+- A `host:port` target is ready once the port accepts TCP connections, checked with `nc -z`.
+- Any other target runs as a shell command with `bash -c` and is ready once the command exits with `0`.
+
+A target counts as `host:port` only when it has exactly 1 colon, a host made of letters, digits, `.`, `_` and `-`, and a port from `1` to `65535`. Anything else runs as a shell command, so a bare URL such as `http://api:8080/health` never succeeds: wrap it in `curl -f` instead.
+
+Shell commands run inside the wait-for-dependencies container, not in the service they check. The image is Alpine Linux with `bash` and `curl` added, so commands can use those as well as BusyBox tools such as `nc` and `wget`. The container discards a command's own output, so the logs show only the container's status lines, plus the `set -x` trace when `DEBUG` is `1`.
+
+### TCP connectivity
 
 Wait for services to accept TCP connections on specific ports:
 
@@ -79,7 +99,7 @@ services:
     command: database:5432 cache:6379
 ```
 
-### Combined TCP and Health Check Commands
+### Combined TCP and health check commands
 
 Wait for both TCP connectivity and custom health check endpoints:
 
@@ -116,60 +136,41 @@ services:
       - api:8080
       - worker:9000
       - "curl -f http://api:8080/health"
-      - "test -S /var/run/app.sock"
 ```
+
+### Output and exit codes
+
+The container prints a line when it starts and finishes each target, plus a notice at most once every 10 seconds while it's still waiting:
+
+```text
+Waiting (tcp): database:5432 …
+… still waiting (tcp): database:5432 (elapsed 10s, timeout 300s)
+✓ Ready (tcp): database:5432
+Waiting (tcp): cache:6379 …
+✓ Ready (tcp): cache:6379
+☑ All services have started.
+```
+
+It exits with `0` once every target is ready, which is what `condition: service_completed_successfully` waits for. It exits with `1` as soon as a target times out, without checking the targets after it, and with `2` when it starts without any targets.
 
 ## Configuration
 
 The container supports the following environment variables:
 
-| Variable          | Default | Description                                                |
-|-------------------|---------|------------------------------------------------------------|
-| `SLEEP_LENGTH`    | `2`     | Time (in seconds) to wait between each check attempt       |
-| `TIMEOUT_LENGTH`  | `300`   | Time (in seconds) to wait for each target before giving up |
-| `SUMMARY_ENABLED` | `true`  | Show summary message when all checks complete successfully |
-| `DEBUG`           | unset   | Trace each command as it runs (`set -x`) when set to `1`   |
+| Variable          | Default | Description                                                           |
+|-------------------|---------|-----------------------------------------------------------------------|
+| `SLEEP_LENGTH`    | `2`     | Time (in seconds) to wait between each check attempt                  |
+| `TIMEOUT_LENGTH`  | `300`   | Time (in seconds) to wait for each target before giving up            |
+| `SUMMARY_ENABLED` | `true`  | Show a summary message once every target is ready, when set to `true` |
+| `DEBUG`           | unset   | Trace each command as it runs (`set -x`) when set to `1`              |
 
 The container stops a check that's still running when `TIMEOUT_LENGTH` runs out, so a hung `curl` can't keep your stack waiting. It sends `SIGKILL` to the check's process group, which holds the check and every process it starts. Nothing in the group can ignore or trap that signal, so a stopped check never counts as ready. If one of your checks legitimately needs more time, raise `TIMEOUT_LENGTH`.
 
 The attempt after the last sleep always gets at least 1 second, so a target can run past `TIMEOUT_LENGTH` by up to `SLEEP_LENGTH` plus 1 second. The container also stops anything a finished check left running in its process group. A process that detaches into its own session, for example with `setsid`, leaves the group and keeps running.
 
-## Development & Maintenance
+## Contributing
 
-```bash
-npm run lint # Lint shell scripts and Dockerfile
-npm run lint-fix # Auto-fix formatting issues
-npm run test-unit # Run unit tests
-npm run test-coverage # Run unit tests with code coverage
-npm run test-functional # Run end-to-end tests with Docker
-```
-
-### Versioning
-
-This project uses [CalVer](https://calver.org/) versioning:
-
-- `YY`: Last two digits of the year, e.g., `25` for 2025.
-- `m`: Numeric month, e.g., April is `4`.
-- `patch`: Patch number for the month, starting at `0`.
-
-Example: `25.4.2` indicates the third patch in April 2025.
-
-### Releasing
-
-Releases are scheduled to occur at a minimum of once per month.
-
-The cross-platform images are built by GitHub actions and pushed to DockerHub:
-
-- `YY.m.patch` tag - when release tag is published on GitHub.
-- `latest` - when release tag is published on GitHub.
-- `canary` - on every push to `main` branch
-
-### Dependencies update
-
-Renovate bot is used to update dependencies. It creates a PR with the changes
-and automatically merges it if CI passes. These changes are then released as
-a `canary` version.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for local development setup, the linting and testing commands, and how releases are made.
 
 ---
-_This repository was created using the [Scaffold](https://getscaffold.dev/)
-project template_
+_This repository was created using the [Scaffold](https://getscaffold.dev/) project template_
