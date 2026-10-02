@@ -7,7 +7,7 @@ setup() {
   export BATS_LIB_PATH="${BATS_TEST_DIRNAME}/../node_modules"
   bats_load_library bats-helpers
 
-  setup_mock
+  mock_setup
 
   if [[ -n ${SUT_SCRIPT-} ]]; then
     [[ ! -f ${SUT_SCRIPT} ]] && echo "SUT_SCRIPT file not found: ${SUT_SCRIPT}" && exit 1
