@@ -61,7 +61,7 @@ Pass 1 or more targets as the container's command. The container checks them in 
 
 A target counts as `host:port` only when it has exactly 1 colon, a host made of letters, digits, `.`, `_` and `-`, and a port from `1` to `65535`. Anything else runs as a shell command, so a bare URL such as `http://api:8080/health` never succeeds: wrap it in `curl -f` instead.
 
-Shell commands run inside the wait-for-dependencies container, not in the service they check. The image is Alpine Linux with `bash` and `curl` added, so commands can use those as well as BusyBox tools such as `nc` and `wget`. The container discards a command's own output, so the logs show only the container's status lines.
+Shell commands run inside the wait-for-dependencies container, not in the service they check. The image is Alpine Linux with `bash` and `curl` added, so commands can use those as well as BusyBox tools such as `nc` and `wget`. The container discards a command's own output, so the logs show only the container's status lines, plus the `set -x` trace when `DEBUG` is `1`.
 
 ### TCP connectivity
 
