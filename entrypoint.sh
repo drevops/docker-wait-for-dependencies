@@ -25,7 +25,8 @@ is_host_port() {
     return 1
   fi
 
-  if [[ ! ${port} =~ ^[0-9]{1,5}$ ]] || ((port < 1 || port > 65535)); then
+  # Bash arithmetic reads a leading zero as octal, so force base 10.
+  if [[ ! ${port} =~ ^[0-9]{1,5}$ ]] || ((10#${port} < 1 || 10#${port} > 65535)); then
     return 1
   fi
 

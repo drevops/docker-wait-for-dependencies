@@ -52,6 +52,19 @@ load _loader
     "localhost:-1" "failure"
     "localhost:port" "failure"
     "localhost:3000a" "failure"
+    "localhost:65536" "failure"
+
+    # Ports with leading zeros, read as decimal
+    "localhost:08080" "success"
+    "localhost:09" "success"
+    "localhost:0080" "success"
+    "localhost:09999" "success"
+    "localhost:010" "success"
+    "localhost:01" "success"
+    "localhost:00001" "success"
+    "localhost:00" "failure"
+    "localhost:00000" "failure"
+    "localhost:065535" "failure"
 
     # Invalid host names
     ":3000" "failure"
@@ -70,7 +83,8 @@ load _loader
     "host::" "failure"
   )
 
-  dataprovider_run "dataprovider_run_callback" 2
+  # Match exactly, so a case also fails when is_host_port() prints anything.
+  dataprovider_run "dataprovider_run_callback" 2 assert_output
 }
 
 @test "entrypoint: exits with usage when no arguments are provided" {
