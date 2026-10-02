@@ -290,8 +290,8 @@ load _loader
 }
 
 @test "wait_cmd: still waiting prints off the 10s mark" {
-  # Mock 'date' so the first check sees 12s elapsed, which is not a
-  # multiple of 10.
+  # Mock 'date' so elapsed time at the first check is 12s, not a multiple
+  # of 10.
   mock_date=$(mock_command date)
   mock_set_output "${mock_date}" 1000 1
   mock_set_output "${mock_date}" 1012 2
