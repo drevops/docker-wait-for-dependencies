@@ -123,17 +123,12 @@ main() {
   fi
 
   local target
+
   for target in "$@"; do
     if is_host_port "${target}"; then
-      local host="${target%:*}"
-      local port="${target#*:}"
-      if ! wait_tcp "${host}" "${port}"; then
-        exit 1
-      fi
+      wait_tcp "${target%:*}" "${target#*:}" || exit 1
     else
-      if ! wait_cmd "${target}"; then
-        exit 1
-      fi
+      wait_cmd "${target}" || exit 1
     fi
   done
 

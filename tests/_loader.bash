@@ -5,9 +5,6 @@ export FIXTURES_DIR="${BATS_TEST_DIRNAME}/fixtures"
 
 setup() {
   export BATS_LIB_PATH="${BATS_TEST_DIRNAME}/../node_modules"
-
-  ASSERT_DIR_EXCLUDE=("vortex" ".data")
-  export ASSERT_DIR_EXCLUDE
   bats_load_library bats-helpers
 
   setup_mock
@@ -39,6 +36,7 @@ wait_for_cmd() {
 
   local start elapsed
   start=$(date +%s)
+
   while true; do
     if "${cmd[@]}" >/dev/null 2>&1; then
       echo "✓" >&3
@@ -46,6 +44,7 @@ wait_for_cmd() {
     fi
 
     elapsed=$(($(date +%s) - start))
+
     if ((elapsed > timeout)); then
       echo "✗ Timeout after ${timeout}s: ${cmd[*]}" >&3
       return 1
