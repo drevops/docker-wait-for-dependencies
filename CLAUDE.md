@@ -45,7 +45,7 @@ npm run test-coverage   # Run unit tests under kcov, writing .coverage-html (wha
 npm run test-functional # Run functional tests with Docker Compose (tests/functional.bats)
 ```
 
-Unit tests cover `is_host_port()` validation, `run_probe()` exit statuses, probes stopped at the timeout along with their child processes, `wait_tcp()` and `wait_cmd()` with mocked `nc` and `date`, and the entrypoint's exit codes and summary, using data providers where cases repeat. Leak checks run the call inside `$(...)` with FD 4 duplicated onto the capture, so the substitution only returns once every probe process has exited. Functional tests use Docker Compose to verify real TCP and command-based waiting scenarios, including a command still running at the timeout.
+Unit tests cover `is_host_port()` validation, `run_probe()` exit statuses, probes stopped at the timeout along with their child processes, `wait_tcp()` and `wait_cmd()` with mocked `nc` and `date`, and the entrypoint's exit codes and summary, using data providers where cases repeat. Leak checks run the call inside `$(...)` with FD 4 duplicated onto the capture, so the substitution only returns once every probe process has exited. Functional tests use Docker Compose to verify real TCP and command-based waiting scenarios, including a command still running at the timeout and a port written with a leading zero.
 
 ### Test Framework
 - **BATS** (Bash Automated Testing System) with `@drevops/bats-helpers` library
