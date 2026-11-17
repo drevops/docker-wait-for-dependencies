@@ -3,7 +3,9 @@
         "config:recommended",
         "customManagers:githubActionsVersions"
     ],
-    "dependencyDashboard": true,
+    "dependencyDashboard": {
+        "enabled": true
+    },
     "automerge": true,
     "branchPrefix": "deps/",
     "configMigration": true,
